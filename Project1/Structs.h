@@ -17,31 +17,28 @@ struct Wav
 		int Subchunk2Size;				// == NumSamples * NumChannels * BitsPerSample/8
 	};
 
-struct FrameParam						
-{
-	float * mfcc;
-	float * delta;
-	float * acc;
-	int n;
-};
 
 struct Label
 {
 public:
-	long long int start;
-	long long int end;
+	int start;
+	int end;
 	std::string name;
 	Label(std::string name, long int start, long int end): start(start), end(end), name(name) {}
 	Label(Label && other) : start(other.start), end(other.end), name(other.name) {}
+	//Label & operator = (Label other)  {start=other.start; end=other.end; name=other.name; }
 private:
 	Label();
 };
 
 struct ObservationSegment
 {
-	FrameParam * fr_array;
+	float ** coef;
+	float ** delta;
+	float ** acc;
+	int frame_lenght;
 	int frames;
-	Label l;
+	Label * l;
 };
 
 struct ParamAudio
@@ -50,8 +47,8 @@ struct ParamAudio
 	int segments;
 	int frame_size;
 	int frame_overlap;
-	char * audio_src;
-	char * laber_scr;
+	std::string audio_src;
+	std::string laber_scr;
 	Wav audio_header;
 };
 

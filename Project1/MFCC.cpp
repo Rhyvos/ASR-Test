@@ -69,13 +69,13 @@ void MFCC::Compute(int num_samples, int num_cep, float * input, float * output)
 	
 	if(window_lenght < num_samples || num_samples <= 0)
 	{
-		fprintf(stderr, "[MFCC::Compute] Wrong audio window size: %d",window_lenght);
+		fprintf(stderr, "[MFCC::Compute] Wrong audio window size: %d\n",window_lenght);
 		return;
 	}
 
 	if(Filters_Number<num_cep || num_cep <= 0)
 	{
-		fprintf(stderr, "[MFCC::Compute] Wrong coefficients number: %d",num_cep);
+		fprintf(stderr, "[MFCC::Compute] Wrong coefficients number: %d\n",num_cep);
 		return;
 	}
 

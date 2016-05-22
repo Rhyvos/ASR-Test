@@ -18,9 +18,22 @@ using namespace std;
 int main()
 {
 	
-	Audio test;
 
-	test.ParamAudioFile("a1.wav","tr1.lab");
+	Audio test;
+	ParamAudio *pm=test.ParamAudioFile("a1.wav","tr1.lab");
+	for(int i=0;i<pm->segments;i++){
+		for (int j = 0; j < pm->os[i].frames; j++)
+		{
+			for (int k = 0; k < pm->os[i].frame_lenght; k++)
+			{
+				printf("Segemnt[%d]:Frame[%d]:Coef[%d] = %f\n",i,j,k,pm->os[i].coef[j][k]);
+				printf("Segemnt[%d]:Frame[%d]:Coef[%d] = %f\n",i,j,k,pm->os[i].delta[j][k]);
+				printf("Segemnt[%d]:Frame[%d]:Coef[%d] = %f\n",i,j,k,pm->os[i].acc[j][k]);
+			}
+
+		}
+	}
+
 	
 	/*for(int i=0; i<300; i++)
 			{

@@ -5,6 +5,7 @@
 #include <stdlib.h> 
 #pragma warning (disable : 4996)
 #define BitsPerByte 8
+#define Second 10000000						// 1s = 1000000000ns but we have time variable in 100ns units
 Audio::Audio(void)
 {
 	frame_size = 400;
@@ -33,7 +34,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	{
 		if(label)
 			fclose(label);
-		fprintf(stderr,"Can't open file: %s",audio_src);
+		fprintf(stderr,"Can't open file: %s\n",audio_src);
 		return NULL;
 	}
 	
@@ -47,7 +48,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	bytes = fread(&pm->audio_header,1,sizeof(pm->audio_header),audio);
 	if(bytes != sizeof(pm->audio_header))
 	{
-		fprintf(stderr,"Wrong audio file: %s",audio_src);
+		fprintf(stderr,"Wrong audio file: %s\n",audio_src);
 		return NULL;
 	}
 	high_freq = high_freq ? high_freq : (pm->audio_header.SampleRate/2);
@@ -103,6 +104,63 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 
 	std::vector<Label> Labels = ExtractLabels(label_src);
 	
+	if(Labels.size() <= 0)
+	{
+		fprintf(stderr,"Bad label file: %s, proceed segmentation without label file\n",label_src);
+	}
+	else
+	{
+		pm->laber_scr = label_src;
+		pm->audio_src = audio_src;
+
+		pm->segments = Labels.size();
+		pm->frame_size = frame_size;
+		pm->frame_overlap = frame_overlap;
+		int sample_delta = Second/pm->audio_header.SampleRate;
+		int i=0;
+		pm->os = new ObservationSegment[pm->segments];
+
+		for(std::vector<Label>::iterator l = Labels.begin(); l != Labels.end(); l++)
+		{
+			int start_frame = l->start/sample_delta;
+			int end_frame = l->end/sample_delta;
+			start_frame = floor(start_frame/(frame_size-frame_overlap));
+			end_frame = floor(end_frame/(frame_size-frame_overlap));
+			if(end_frame - start_frame <= 0 || start_frame>=frames)
+			{
+				fprintf(stderr,"Label[%d]: wrong segment lenght: %d or start frame: %d out of bound: %d, skipping that label\n",i,end_frame - start_frame,start_frame,frames);
+			}
+			else
+			{
+				if(start_frame>=0 && start_frame<frames)
+				{
+					pm->os[i].coef = coef+start_frame;
+					pm->os[i].delta = delta+start_frame;
+					pm->os[i].acc = acc+start_frame;
+				}
+				else
+				{
+					fprintf(stderr,"Label[%d]: wrong start frame\n",i,start_frame);
+					continue;
+				}
+
+				
+				pm->os[i].frame_lenght = cep_number;
+				if(end_frame > frames)
+					pm->os[i].frames = frames - start_frame;
+				else
+					pm->os[i].frames = end_frame - start_frame;
+				pm->os[i].l = &(*l);
+				i++;
+			}
+			
+		}
+		if(i != Labels.size())
+		{
+			pm->segments = i;
+		}
+	}
+
 
 
 	if(audio)
@@ -111,7 +169,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		fclose(label);
 	delete[] buffer_array;
 	delete mfcc;
-	return NULL;
+	return pm;
 }
 
 std::vector<std::string> split(char * str,const char * delimiter) {
@@ -131,6 +189,7 @@ std::vector<Label> Audio::ExtractLabels(const char * label_src)
 	std::ifstream input(label_src);
 	std::vector<std::string> split_buffer;
 	std::vector<Label> output;
+	int start,end;
 	int index=0;
 	char buffer[256];
 	while(input.good())
@@ -139,12 +198,18 @@ std::vector<Label> Audio::ExtractLabels(const char * label_src)
 		split_buffer = split(buffer," \n\t");
 		if(split_buffer.size() != 3)								// 3 because startpoint endpoint and label name per line
 		{
-			fprintf(stderr,"Label file:%s Corrupted at line %d: %s",label_src,index+1,buffer);
-			return output;
+			fprintf(stderr,"Label file:%s Corrupted at line %d: %s\n",label_src,index+1,buffer);
 		}
 		else
 		{
-			output.emplace_back(split_buffer[2],std::atol(split_buffer[0].c_str()),atol(split_buffer[1].c_str()));
+			start = atoi(split_buffer[0].c_str());
+			end = atoi(split_buffer[1].c_str());
+			if(start>=end)
+			{
+				fprintf(stderr,"Label file:%s Corrupted at line %d: %s (start time higher then end time)\n",label_src,index+1,buffer);
+			}
+			else
+				output.emplace_back(split_buffer[2],start,end);
 			index++;
 		}
 	}
