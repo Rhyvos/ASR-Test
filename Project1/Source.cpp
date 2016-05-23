@@ -9,6 +9,8 @@
 #include <cmath>
 #include <vector>
 #include "Audio.h"
+#include "HMM.h"
+
 //#define _CRT_SECURE_NO_DEPRECATE
 #pragma warning (disable : 4996)
 using namespace std;
@@ -19,9 +21,31 @@ int main()
 {
 	
 
-	Audio test;
-	ParamAudio *pm=test.ParamAudioFile("a1.wav","tr1.lab");
-	for(int i=0;i<pm->segments;i++){
+	Audio audio;
+	ParamAudio *pm=audio.ParamAudioFile("a1.wav","tr1.lab");
+	
+	HMM hmm(36,5);
+
+	hmm.Initialise(pm,10,"S");
+	for (int i = 0; i < hmm.states-2; i++)
+	{
+		printf("\nState %d:\n",hmm.state[i].state_nr);
+		printf("Mean\n");
+		for (int j = 0; j < hmm.vector_size; j++)
+		{
+			printf("%f\t",hmm.state[i].mean[j]);
+
+		}
+		printf("\nVariance\n");
+		for (int j = 0; j < hmm.vector_size; j++)
+		{
+			printf("%f\t",hmm.state[i].var[j]);
+
+		}
+
+	}
+	
+	/*for(int i=0;i<pm->segments;i++){
 		for (int j = 0; j < pm->os[i].frames; j++)
 		{
 			for (int k = 0; k < pm->os[i].frame_lenght; k++)

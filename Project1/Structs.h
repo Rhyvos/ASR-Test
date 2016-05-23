@@ -26,7 +26,7 @@ public:
 	std::string name;
 	Label(std::string name, long int start, long int end): start(start), end(end), name(name) {}
 	Label(Label && other) : start(other.start), end(other.end), name(other.name) {}
-	//Label & operator = (Label other)  {start=other.start; end=other.end; name=other.name; }
+	Label& operator= (Label && other)  {start=other.start; end=other.end; name=other.name; }
 private:
 	Label();
 };
@@ -52,4 +52,11 @@ struct ParamAudio
 	Wav audio_header;
 };
 
+struct State
+{
+	float * mean;
+	float * var;
+	int state_nr;
+
+};
 
