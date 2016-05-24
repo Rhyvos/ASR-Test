@@ -1,6 +1,6 @@
+#define _USE_MATH_DEFINES
 #include "HMM.h"
-
-
+#include <cmath>
 HMM::HMM(void)
 {
 
@@ -77,6 +77,7 @@ void HMM::Initialise(ParamAudio * pa, int iteration, std::string label_name)
 {
 	GetMean(pa,label_name);
 	GetVariance(pa,label_name);
+	FindGConst();
 }
 
 
@@ -199,5 +200,23 @@ void HMM::GetVariance(ParamAudio * pa, std::string label_name)
 	}
 	delete[] state_fr_counter;
 	delete[] temp_var;
+
+}
+
+
+void HMM::FindGConst(void)
+{
+	float z;
+	float sum;
+	for(int i=0 ;i<states-2;i++)
+	{
+		sum = vector_size*log(2*M_PI);
+		for (int j = 0; j < vector_size; j++)
+		{
+			z = (state[i].var[j]<=MINLARG)?LZERO:log(state[i].var[j]);
+			sum += z;
+		}
+		state[i].g_const=sum;
+	}
 
 }

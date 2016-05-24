@@ -57,6 +57,6 @@ struct State
 	float * mean;
 	float * var;
 	int state_nr;
-
+	float g_const;
 };
 
