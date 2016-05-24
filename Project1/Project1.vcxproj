@@ -67,12 +67,14 @@
   <ItemGroup>
     <ClInclude Include="Audio.h" />
     <ClInclude Include="FFT.h" />
+    <ClInclude Include="HMM.h" />
     <ClInclude Include="MFCC.h" />
     <ClInclude Include="Structs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Audio.cpp" />
     <ClCompile Include="FFT.cpp" />
+    <ClCompile Include="HMM.cpp" />
     <ClCompile Include="MFCC.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
