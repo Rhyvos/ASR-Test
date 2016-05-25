@@ -1,3 +1,11 @@
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new DEBUG_NEW
+#endif
+
 #define _USE_MATH_DEFINES
 #include "MFCC.h"
 #include "FFT.h"
@@ -61,6 +69,7 @@ MFCC::~MFCC(void)
 			delete[] filter_bank;
 	}
 	delete fft;
+	delete[] CepLift;
 }
 
 

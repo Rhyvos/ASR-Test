@@ -1,3 +1,10 @@
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new DEBUG_NEW
+#endif
 #define _USE_MATH_DEFINES
 #include <iostream>
 #include "MFCC.h"
@@ -9,7 +16,7 @@
 #include <cmath>
 #include <vector>
 #include "Audio.h"
-#include "HMM.h"
+#include "hmm.h"
 
 //#define _CRT_SECURE_NO_DEPRECATE
 #pragma warning (disable : 4996)
@@ -20,44 +27,50 @@ using namespace std;
 int main()
 {
 	
+	
+	
 
 	Audio audio;
 	ParamAudio *pm=audio.ParamAudioFile("a1.wav","tr1.lab");
 	
-	HMM hmm(36,5);
+	HMM *hmm = new HMM(36,5);
 
-	hmm.Initialise(pm,10,"S");
-	for (int i = 0; i < hmm.states-2; i++)
+	hmm->Initialise(pm,10,"S");
+	for (int i = 0; i < hmm->states-2; i++)
 	{
-		printf("\nState %d:\n",hmm.state[i].state_nr);
+		printf("\nState %d:\n",hmm->state[i].state_nr);
 		printf("Mean\n");
-		for (int j = 0; j < hmm.vector_size; j++)
+		for (int j = 0; j < hmm->vector_size; j++)
 		{
-			printf("%f\t",hmm.state[i].mean[j]);
+			printf("%f\t",hmm->state[i].mean[j]);
 
 		}
 		printf("\nVariance\n");
-		for (int j = 0; j < hmm.vector_size; j++)
+		for (int j = 0; j < hmm->vector_size; j++)
 		{
-			printf("%f\t",hmm.state[i].var[j]);
+			printf("%f\t",hmm->state[i].var[j]);
 
 		}
 
 	}
 	
-	/*for(int i=0;i<pm->segments;i++){
-		for (int j = 0; j < pm->os[i].frames; j++)
-		{
-			for (int k = 0; k < pm->os[i].frame_lenght; k++)
-			{
-				printf("Segemnt[%d]:Frame[%d]:Coef[%d] = %f\n",i,j,k,pm->os[i].coef[j][k]);
-				printf("Segemnt[%d]:Frame[%d]:Coef[%d] = %f\n",i,j,k,pm->os[i].delta[j][k]);
-				printf("Segemnt[%d]:Frame[%d]:Coef[%d] = %f\n",i,j,k,pm->os[i].acc[j][k]);
-			}
-
-		}
+	
+	
+	for(int i=0;i<pm->segments;i++){
+		delete pm->os[i].l;
 	}
-
+	for (int i = 0; i < pm->param_frames; i++)
+	{
+		delete[] pm->coef_first[i];
+		delete[] pm->delta_first[i];
+		delete[] pm->acc_first[i];
+	}
+	delete[] pm->coef_first;
+	delete[] pm->delta_first;	
+	delete[] pm->acc_first;
+	delete[] pm->os;
+	delete pm;
+	delete hmm;
 	
 	/*for(int i=0; i<300; i++)
 			{
@@ -163,7 +176,8 @@ int main()
 	
 	*/
 	
-	getchar();
+	//getchar();
+	_CrtDumpMemoryLeaks();
 	return 0;
 }
 

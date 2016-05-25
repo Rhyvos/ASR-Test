@@ -50,6 +50,10 @@ struct ParamAudio
 	std::string audio_src;
 	std::string laber_scr;
 	Wav audio_header;
+	float ** coef_first;			//ptr on first element just for correct deleting
+	float ** delta_first;
+	float ** acc_first;
+	int param_frames;
 };
 
 struct State

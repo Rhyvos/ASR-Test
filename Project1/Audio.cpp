@@ -1,3 +1,12 @@
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new DEBUG_NEW
+#endif
+
+
 #include "Audio.h"
 #include <fstream>
 #include "MFCC.h"
@@ -113,6 +122,10 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		pm->segments = 1;											//because only one segment with whole audio params
 		pm->frame_size = frame_size;
 		pm->frame_overlap = frame_overlap;
+		pm->coef_first = coef;
+		pm->delta_first = delta;
+		pm->acc_first = acc;
+		pm->param_frames = frames;
 		int sample_delta = Second/pm->audio_header.SampleRate;
 		int i=0;
 		pm->os = new ObservationSegment[pm->segments];
@@ -128,10 +141,13 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	{
 		pm->laber_scr = label_src;
 		pm->audio_src = audio_src;
-
 		pm->segments = Labels.size();
 		pm->frame_size = frame_size;
 		pm->frame_overlap = frame_overlap;
+		pm->coef_first = coef;
+		pm->delta_first = delta;
+		pm->acc_first = acc;
+		pm->param_frames = frames;
 		int sample_delta = Second/pm->audio_header.SampleRate;
 		int i=0;
 		pm->os = new ObservationSegment[pm->segments];
@@ -173,6 +189,8 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		}
 		if(i != Labels.size())
 		{
+			for(int j=i;j<Labels.size();j++)
+				delete Labels.at(j);
 			pm->segments = i;
 		}
 	}
@@ -183,6 +201,8 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		fclose(audio);
 	if(label)
 		fclose(label);
+
+
 	delete[] buffer_array;
 	delete mfcc;
 	return pm;
