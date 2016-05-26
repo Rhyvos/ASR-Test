@@ -23,7 +23,9 @@ public:
 	void GetMean(ParamAudio * pa, std::string label_name);
 	void GetVariance(ParamAudio * pa, std::string label_name);
 	void FindGConst(void);
-	float OutP(ObservationSegment os, int fr_number, int state_nr);
-	float ViterbiAlg(ObservationSegment os, int * state_vec, int * mixes);
+	float OutP(ObservationSegment * os, int fr_number, int state_nr);
+	float ViterbiAlg(ObservationSegment * os, int * state_vec, int * mixes);
+
+	void ComputeTraceBack(int frames_in_seg, int state, int * states_vec, short ** trace_back);
 };
 

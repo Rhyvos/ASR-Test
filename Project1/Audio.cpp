@@ -18,7 +18,7 @@
 Audio::Audio(void)
 {
 	frame_size = 400;
-	frame_overlap = 160;
+	frame_overlap = 240;
 	low_freq = 0;
 	high_freq = 0;
 	cep_number = 12;
@@ -68,7 +68,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	float *buffer_array = new float[frame_size];
 	int index = 0;
 	int frame_index = 0;
-	int frames = floor((pm->audio_header.Subchunk2Size/(pm->audio_header.BitsPerSample/BitsPerByte)) / (frame_size-frame_overlap));
+	int frames = 0;// floor((pm->audio_header.Subchunk2Size/(pm->audio_header.BitsPerSample/BitsPerByte)) / (frame_size-frame_overlap));
 
 	while(frames*(frame_size-frame_overlap)+frame_overlap <( pm->audio_header.Subchunk2Size/(pm->audio_header.BitsPerSample/BitsPerByte)))
 		frames++;
@@ -87,18 +87,16 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		acc[i] = new float[cep_number];
 	}
 
-
+	int c=0;
 	while(fread(&buffer,1,sizeof(buffer),audio))									// audio parametrizing loop
 	{
 		buffer_array[index++] = (float)buffer;
-
+		c++;
 		if(index == frame_size)
 		{
 			mfcc->Compute(index,cep_number,buffer_array,coef[frame_index++]);			// get frame parametrs
 			for(int i=0; i<frame_overlap; i++)
-			{
 				buffer_array[i] = buffer_array[frame_size - frame_overlap + i];		//copy overlaping data for each frame
-			}
 			index = frame_overlap;
 		}
 	}

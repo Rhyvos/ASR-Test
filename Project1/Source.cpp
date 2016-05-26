@@ -31,8 +31,9 @@ int main()
 	
 
 	Audio audio;
-	ParamAudio *pm=audio.ParamAudioFile("a1.wav","tr1.lab");
+	ParamAudio *pm=audio.ParamAudioFile("a1.wav","a1.lab");
 	
+
 	HMM *hmm = new HMM(36,5);
 
 	hmm->Initialise(pm,10,"S");
@@ -54,21 +55,6 @@ int main()
 
 	}
 	
-	
-	
-	for(int i=0;i<pm->segments;i++){
-		delete pm->os[i].l;
-	}
-	for (int i = 0; i < pm->param_frames; i++)
-	{
-		delete[] pm->coef_first[i];
-		delete[] pm->delta_first[i];
-		delete[] pm->acc_first[i];
-	}
-	delete[] pm->coef_first;
-	delete[] pm->delta_first;	
-	delete[] pm->acc_first;
-	delete[] pm->os;
 	delete pm;
 	delete hmm;
 	

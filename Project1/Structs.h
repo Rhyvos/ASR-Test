@@ -54,6 +54,30 @@ struct ParamAudio
 	float ** delta_first;
 	float ** acc_first;
 	int param_frames;
+	~ParamAudio()
+	{
+	for(int i=0;i<segments;i++){
+		if(os[i].l)
+			delete os[i].l;
+	}
+	for (int i = 0; i < param_frames; i++)
+	{
+		if(coef_first[i])
+			delete[] coef_first[i];
+		if(delta_first[i])
+			delete[] delta_first[i];
+		if(acc_first[i])
+			delete[] acc_first[i];
+	}
+	if(coef_first)
+		delete[] coef_first;
+	if(delta_first)
+		delete[] delta_first;	
+	if(acc_first)
+		delete[] acc_first;
+	if(os)
+		delete[] os;
+	}
 };
 
 struct State
@@ -63,4 +87,6 @@ struct State
 	int state_nr;
 	float g_const;
 };
+
+
 

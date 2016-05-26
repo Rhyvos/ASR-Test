@@ -58,8 +58,9 @@ void FFT::Window_Func(int function_no, int num_samples, float *in)
 		  // Hamming
 		  const double multiplier = 2 * M_PI / (num_samples-1);
 		  static const double coeff0 = 0.54, coeff1 = -0.46;
-		  for (int ii = 0; ii < num_samples; ++ii)
+		  for (int ii = 0; ii < num_samples; ++ii){
 			in[ii] *= coeff0 + coeff1 * cos(ii * multiplier);
+		  }
 				
 	   }
 		  break;

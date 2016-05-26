@@ -68,14 +68,14 @@ HMM::HMM(int vector_size, int states): vector_size(vector_size), states(states)
 	{
 		transition[i] = new float[states];
 		for(int j=0;j<states;j++)
-			transition[i][j] = 0.0;
+			transition[i][j] = LZERO;
 		if(i!=0 && i!=(states-1))
 		{
-			transition[i][i] = 0.6;
-			transition[i][i+1] = 0.4;
+			transition[i][i] = log(0.6);
+			transition[i][i+1] = log(0.4);
 		}
 		if(i==0)
-			transition[i][i+1] = 1.0; 
+			transition[i][i+1] = log(1.0); 
 
 	}
 
@@ -105,8 +105,9 @@ void HMM::Initialise(ParamAudio * pa, int iteration, std::string label_name)
 				states_vec = new int[pa->os[j].frames];
 				mixes = new int[pa->os[j].frames];
 
-				newP += ViterbiAlg(pa->os[j],states_vec,mixes);
-
+				newP += ViterbiAlg(pa->os+j,states_vec,mixes);
+				for(int i=0;i<pa->os[j].frames;i++)
+					printf("%d\t",states_vec[i]);
 				delete[] mixes;
 				delete[] states_vec;
 			}
@@ -126,6 +127,7 @@ void HMM::GetMean(ParamAudio * pa, std::string label_name)
 	{
 		state_fr_counter[i]=0;
 	}
+
 
 	for(int i=0;i<pa->segments;i++)
 	{
@@ -258,42 +260,50 @@ void HMM::FindGConst(void)
 }
 
 
-float HMM::OutP(ObservationSegment os, int fr_number, int state_nr)
+float HMM::OutP(ObservationSegment * os, int fr_number, int state_nr)
 {
-	if(os.frame_lenght*3!=vector_size)
+	if(os->frame_lenght*3!=vector_size)
 	{
-		fprintf(stderr,"HMM.OpuP:Audio param vector size diffrent then state vector size: %d!=%s \n",os.frame_lenght*3,vector_size);
+		fprintf(stderr,"HMM.OpuP:Audio param vector size diffrent then state vector size: %d!=%s \n",os->frame_lenght*3,vector_size);
 		return 0;
 	}
 
 	float sum;
 	float x;
-	sum = state[state_nr].g_const;
-	for (int i = 0; i < os.frame_lenght; i++)
+	sum = state[state_nr-1].g_const;
+
+	for(int i=0;i<os->frame_lenght;i++)
+	   printf("%f\t%f\t%f\n",os->coef[fr_number][i],state[state_nr-1].mean[i],state[state_nr-1].var[i]);
+	for(int i=0;i<os->frame_lenght;i++)
+	   printf("%f\t%f\t%f\n",os->delta[fr_number][i],state[state_nr-1].mean[i+os->frame_lenght],state[state_nr-1].var[i+os->frame_lenght]);
+	for(int i=0;i<os->frame_lenght;i++)
+	   printf("%f\t%f\t%f\n",os->acc[fr_number][i],state[state_nr-1].mean[i+(os->frame_lenght*2)],state[state_nr-1].var[i+(os->frame_lenght*2)]);
+
+	for (int i = 0; i < os->frame_lenght; i++)
 	{
-		if(os.coef != NULL)
+		if(os->coef != NULL)
 		{
-			x= os.coef[fr_number][i] - state[state_nr].mean[i];
-			sum += (x*x)/state[state_nr].var[i];
+			x= os->coef[fr_number][i] - state[state_nr-1].mean[i];
+			sum += (x*x)/state[state_nr-1].var[i];
 		}
 
-		if(os.delta != NULL)
+		if(os->delta != NULL)
 		{
-			x= os.delta[fr_number][i] - state[state_nr].mean[i+os.frame_lenght];
-			sum += (x*x)/state[state_nr].var[i+os.frame_lenght];
+			x= os->delta[fr_number][i] - state[state_nr-1].mean[i+os->frame_lenght];
+			sum += (x*x)/state[state_nr-1].var[i+os->frame_lenght];
 		}
 
-		if(os.acc != NULL)
+		if(os->acc != NULL)
 		{
-			x= os.acc[fr_number][i] - state[state_nr].mean[i+(os.frame_lenght*2)];
-			sum += (x*x)/state[state_nr].var[i+(os.frame_lenght*2)];
+			x= os->acc[fr_number][i] - state[state_nr-1].mean[i+(os->frame_lenght*2)];
+			sum += (x*x)/state[state_nr-1].var[i+(os->frame_lenght*2)];
 		}
 	}
 	return -0.5*sum;
 }
 
 
-float HMM::ViterbiAlg(ObservationSegment os, int * states_vec, int * mixes)
+float HMM::ViterbiAlg(ObservationSegment * os, int * states_vec, int * mixes)
 {
 
    int currState,prevState,bestPrevState;
@@ -303,9 +313,9 @@ float HMM::ViterbiAlg(ObservationSegment os, int * states_vec, int * mixes)
    float *lastP;
    float *thisP;
 
-   trace_back = new short*[os.frames];
+   trace_back = new short*[os->frames];
 
-   for (int i=0; i < os.frames; i++)
+   for (int i=0; i < os->frames; i++)
    {
 		trace_back[i] = new short[states];
    }   
@@ -313,8 +323,7 @@ float HMM::ViterbiAlg(ObservationSegment os, int * states_vec, int * mixes)
    lastP = new float[states];
    thisP = new float[states];
 
-   /* From entry state 1: Column 1 */
-   //obs = GetSegObs(segStore, segNum, 1);
+  
    
    for (currState=1; currState < states-1; currState++) {
       tranP = transition[0][currState];
@@ -322,20 +331,20 @@ float HMM::ViterbiAlg(ObservationSegment os, int * states_vec, int * mixes)
       if (tranP<LSMALL) 
          lastP[currState] = LZERO;
       else
-         lastP[currState] = tranP + OutP(os,0,currState-1);
-      trace_back[1][currState] = 1;
+         lastP[currState] = tranP + OutP(os,0,currState);
+      trace_back[0][currState] = 1;
    }
-   //if (1/*trace & T_VIT */ ) ShowP(1,lastP);  
    
-   /* Columns[2] -> Columns[segLen] -- this is the general case */
-   for (frame_id=1; frame_id<os.frames; frame_id++) {
-      //obs = GetSegObs(segStore, segNum, frame_id);
+  
+  
+   for (frame_id=1; frame_id<os->frames; frame_id++) {
+      
          
       for (currState=1;currState<states-1;currState++) {
 
          bestPrevState=1;
-         tranP = transition[2][currState]; 
-		 prevP = lastP[2];
+         tranP = transition[0][currState]; 
+		 prevP = lastP[1];
          bestP = (tranP<LSMALL) ? LZERO : tranP+prevP;
 
          for (prevState=2;prevState<states-1;prevState++) {
@@ -350,7 +359,7 @@ float HMM::ViterbiAlg(ObservationSegment os, int * states_vec, int * mixes)
          if (bestP<LSMALL)
             currP = thisP[currState] = LZERO;
          else {
-            currP = OutP(os,frame_id,currState-1);
+            currP = OutP(os,frame_id,currState);
             thisP[currState] = bestP+currP;
          }
         
@@ -362,7 +371,7 @@ float HMM::ViterbiAlg(ObservationSegment os, int * states_vec, int * mixes)
 	  }
    }
    
-   /* column[segLen]--> exit state(numStates) */
+
    bestPrevState=1;
    tranP = transition[1][states-1]; prevP = lastP[1];
    
@@ -376,15 +385,24 @@ float HMM::ViterbiAlg(ObservationSegment os, int * states_vec, int * mixes)
       }
    }  
 
-   /* bestPrevState now gives last internal state along best state sequence */
    
-   //DoTraceBack(segLen,states,bestPrevState);
-   //if (mixes!=NULL)  /* ie not DISCRETE */
-      //FindBestMixes(segNum,segLen,states,mixes);
+   for (int i = 0; i < os->frames; i++)
+   {
+	   for (int j = 0; j < states; j++)
+	   {
+		   printf("%d\t",trace_back[i][j]);
+
+	   }
+	   printf("\n");
+
+   }
+   ComputeTraceBack(os->frames,bestPrevState,states_vec,trace_back);
+
+   
    
    
   
-	for (int i = 0; i < os.frames; i++)
+	for (int i = 0; i < os->frames; i++)
 	{
 		delete[] trace_back[i];
 	}
@@ -394,3 +412,14 @@ float HMM::ViterbiAlg(ObservationSegment os, int * states_vec, int * mixes)
   
    return bestP;
 }
+
+
+void HMM::ComputeTraceBack(int frames_in_seg, int state, int * states_vec, short ** trace_back)
+{
+   for (int i=frames_in_seg-1; i>=0; i--) {
+      states_vec[i] = state;
+      state=trace_back[i][state];
+   }
+}
+
+

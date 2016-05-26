@@ -116,6 +116,7 @@ void MFCC::Compute(int num_samples, int num_cep, float * input, float * output)
 
 	Preemphasis(num_samples,preemphasis_param,tmp_data);					//only audio data
 	fft->Window_Func(FFT::Hamming,num_samples,tmp_data);					//only audio data
+
 	fft->Transform(window_lenght,false,tmp_data,NULL,real_data,imag_data);
 
 	for (int i = 0; i < Filters_Number; i++)
@@ -153,10 +154,12 @@ void MFCC::DCT(int num_samples, bool inverse, float * input, float * output)
    mfnorm = sqrt(2.0/(float)num_samples);
    pi_factor = M_PI/(float)num_samples;
 
+ 
+
    for (j=0; j<num_samples; j++)  {
 	   output[j] = 0.0; x = (float)(j + 1)* pi_factor;
       for (k=0; k<num_samples; k++)
-         output[j] += input[k] * cos(x*(k+0.5));
+	    output[j] += input[k] * cos(x*(k+0.5)); 
       output[j] *= mfnorm;
    }  
 }
