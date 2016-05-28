@@ -42,6 +42,7 @@ HMM::HMM(char * hmm_src) //load from file
 
 HMM::HMM(int vector_size, int states): vector_size(vector_size), states(states)
 {
+
 	if(states<3 || vector_size<1)
 	{
 		fprintf(stderr, "HMM: Wrong initialisaton parametrs: vector_size: %d or states: %d\n",vector_size,states);
@@ -49,7 +50,7 @@ HMM::HMM(int vector_size, int states): vector_size(vector_size), states(states)
 	}
 	
 	state = new State[states-2];				// we don't need first and last state mean and variance
-
+	minVar  = 1.0E-2;
 	for(int i=0 ;i<states-2;i++)
 	{
 		state[i].mean = new float[vector_size];
@@ -200,21 +201,21 @@ void HMM::GetVariance(ParamAudio * pa, std::string label_name)
 					if(pa->os[i].coef != NULL)
 					{
 						x=(pa->os[i].coef[j][k])-state[statenumber].mean[k];
-						temp_var[statenumber][k] = x*x;
+						temp_var[statenumber][k] += x*x;
 					}
 
 						
 					if(pa->os[i].delta != NULL)
 					{
 						x=(pa->os[i].delta[j][k])-state[statenumber].mean[k+pa->os[i].frame_lenght] ;
-						temp_var[statenumber][k+pa->os[i].frame_lenght] = x*x;
+						temp_var[statenumber][k+pa->os[i].frame_lenght] += x*x;
 					}
 
 						
 					if(pa->os[i].acc != NULL)
 					{
 						x=(pa->os[i].acc[j][k])-state[statenumber].mean[k+(2*pa->os[i].frame_lenght)];
-						temp_var[statenumber][k+(2*pa->os[i].frame_lenght)] = x*x;
+						temp_var[statenumber][k+(2*pa->os[i].frame_lenght)] += x*x;
 					}
 				}
 				state_fr_counter[statenumber]++;
@@ -228,7 +229,8 @@ void HMM::GetVariance(ParamAudio * pa, std::string label_name)
 	{
 		for (int j = 0; j < vector_size; j++)
 		{
-			state[i].var[j] = temp_var[i][j]/state_fr_counter[i];
+			temp_var[i][j]/=state_fr_counter[i];
+			state[i].var[j] = temp_var[i][j]<minVar?minVar:temp_var[i][j];
 		}
 	}
 
@@ -332,7 +334,7 @@ float HMM::ViterbiAlg(ObservationSegment * os, int * states_vec, int * mixes)
          lastP[currState] = LZERO;
       else
          lastP[currState] = tranP + OutP(os,0,currState);
-      trace_back[0][currState] = 1;
+      trace_back[0][currState] = 0;
    }
    
   
@@ -343,7 +345,7 @@ float HMM::ViterbiAlg(ObservationSegment * os, int * states_vec, int * mixes)
       for (currState=1;currState<states-1;currState++) {
 
          bestPrevState=1;
-         tranP = transition[0][currState]; 
+         tranP = transition[1][currState]; 
 		 prevP = lastP[1];
          bestP = (tranP<LSMALL) ? LZERO : tranP+prevP;
 

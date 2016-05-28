@@ -16,6 +16,7 @@ public:
 	float ** transition;
 	int states;
 	int vector_size;
+	float minVar;
 public:
 	HMM(char * hmm_src);
 	HMM(int vector_size, int states);

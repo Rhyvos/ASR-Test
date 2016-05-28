@@ -72,6 +72,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 
 	while(frames*(frame_size-frame_overlap)+frame_overlap <( pm->audio_header.Subchunk2Size/(pm->audio_header.BitsPerSample/BitsPerByte)))
 		frames++;
+	frames--;
 
 	float ** coef, **delta, ** acc;
 
@@ -101,10 +102,10 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		}
 	}
 
-	if(index > frame_overlap)
+	/*if(index > frame_overlap)
 	{
 		mfcc->Compute(index,cep_number,buffer_array,coef[frame_index++]);	
-	}
+	}*/
 	
 	mfcc->AddRegression(coef,delta,frame_index,cep_number,regression_window);
 	mfcc->AddRegression(delta,acc,frame_index,cep_number,regression_window);
