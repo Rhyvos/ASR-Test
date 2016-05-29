@@ -14,9 +14,12 @@ public:
 	HMM(void);
 	State * state;
 	float ** transition;
+	float * obs_count;				//counts occupation of the state int trans
+	float ** trans_count;
 	int states;
 	int vector_size;
 	float minVar;
+	float epsilon;
 public:
 	HMM(char * hmm_src);
 	HMM(int vector_size, int states);
@@ -28,5 +31,10 @@ public:
 	float ViterbiAlg(ObservationSegment * os, int * state_vec, int * mixes);
 
 	void ComputeTraceBack(int frames_in_seg, int state, int * states_vec, short ** trace_back);
+	void UpdateCounts(ObservationSegment * os, int * state_vec);
+	void ResetOldParams(void);
+	void UpdateMean(void);
+	void UpdateVar(void);
+	void UpdateTransition(void);
 };
 

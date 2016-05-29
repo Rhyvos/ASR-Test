@@ -84,6 +84,11 @@ struct State
 {
 	float * mean;
 	float * var;
+
+	float * old_mean;
+	float * old_var;
+	int obs_count;
+
 	int state_nr;
 	float g_const;
 };

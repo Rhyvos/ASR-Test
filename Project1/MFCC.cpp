@@ -12,7 +12,7 @@
 #include <cmath>
 #include <stdio.h>
 
-//#define TEST
+#define TEST
 #ifdef TEST
 float Mel(int k,float fres);
 float WarpFreq (float fcl, float fcu, float freq, float minFreq, float maxFreq , float alpha);
@@ -354,7 +354,7 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 
 
 	/* Create vector of fbank centre frequencies */
-	float * cf = new float[maxChan];
+	float * cf = new float[maxChan+1];
 	ms = mhi - mlo;
 
 	for (chan=1; chan <= maxChan; chan++) {
@@ -402,6 +402,6 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 	}
 	/* Create workspace for fft */
 
-
+	delete[] cf;
 }  
 #endif // TEST

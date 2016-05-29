@@ -52,7 +52,17 @@ int main()
 			printf("%f\t",hmm->state[i].var[j]);
 
 		}
+		printf("\nGConst\t%f",hmm->state[i].g_const);
 
+	}
+	printf("\n");
+	for (int i = 0; i < 5; i++)
+	{
+		for (int j = 0; j < 5; j++)
+		{
+			printf("%f\t",exp(hmm->transition[i][j]));
+		}
+		printf("\n");
 	}
 	
 	delete pm;

@@ -25,13 +25,18 @@ HMM::~HMM(void)
 	{
 		delete[] state[i].mean;
 		delete[] state[i].var;
+		delete[] state[i].old_mean;
+		delete[] state[i].old_var;
 	}
 	delete[] state;
 	for(int i=0;i<states;i++)
 	{
 		delete[] transition[i];
+		delete[] trans_count[i];
 	}
 	delete[] transition;
+	delete[] trans_count;
+	delete[] obs_count;
 }
 
 
@@ -51,23 +56,29 @@ HMM::HMM(int vector_size, int states): vector_size(vector_size), states(states)
 	
 	state = new State[states-2];				// we don't need first and last state mean and variance
 	minVar  = 1.0E-2;
+	epsilon = 1.0E-4;
+
 	for(int i=0 ;i<states-2;i++)
 	{
 		state[i].mean = new float[vector_size];
 		state[i].var = new float[vector_size];
+		state[i].old_mean = new float[vector_size];
+		state[i].old_var = new float[vector_size];
 		for(int j=0;j<vector_size;j++)
 		{
 			state[i].mean[j]=0.0;
 			state[i].var[j]=1.0;
 		}
-
 		state[i].state_nr=i+1;
 	}
 
 	transition = new float*[states];
+	trans_count = new float*[states];
+	obs_count = new float[states];
 	for(int i=0 ;i<states;i++)
 	{
 		transition[i] = new float[states];
+		trans_count[i] = new float[states];
 		for(int j=0;j<states;j++)
 			transition[i][j] = LZERO;
 		if(i!=0 && i!=(states-1))
@@ -92,14 +103,15 @@ void HMM::Initialise(ParamAudio * pa, int iteration, std::string label_name)
 	bool converged = false;   
 	int * states_vec;
 	int * mixes;
-
+	int j;
 	GetMean(pa,label_name);
 	GetVariance(pa,label_name);
 	FindGConst();
-
+	totalP = LZERO;
 	for (int i = 0; !converged && i < iteration; i++)
 	{
-		for (int j = 0, newP = 0; j < pa->segments; j++)
+		ResetOldParams();
+		for (j = 0, newP = 0; j < pa->segments; j++)
 		{
 			if(!pa->os[j].l->name.compare(label_name))
 			{
@@ -107,12 +119,22 @@ void HMM::Initialise(ParamAudio * pa, int iteration, std::string label_name)
 				mixes = new int[pa->os[j].frames];
 
 				newP += ViterbiAlg(pa->os+j,states_vec,mixes);
-				for(int i=0;i<pa->os[j].frames;i++)
-					printf("%d\t",states_vec[i]);
+				UpdateCounts(pa->os+j,states_vec);
 				delete[] mixes;
 				delete[] states_vec;
 			}
+			
 		}
+		newP /= pa->segments;
+		delta = newP - totalP;
+		converged = (i>0) && (fabs(delta) < epsilon);
+		if (!converged)
+		{	
+			UpdateMean();
+			UpdateVar();
+			UpdateTransition();
+		}
+		totalP = newP;
 
 	}
 
@@ -274,12 +296,6 @@ float HMM::OutP(ObservationSegment * os, int fr_number, int state_nr)
 	float x;
 	sum = state[state_nr-1].g_const;
 
-	for(int i=0;i<os->frame_lenght;i++)
-	   printf("%f\t%f\t%f\n",os->coef[fr_number][i],state[state_nr-1].mean[i],state[state_nr-1].var[i]);
-	for(int i=0;i<os->frame_lenght;i++)
-	   printf("%f\t%f\t%f\n",os->delta[fr_number][i],state[state_nr-1].mean[i+os->frame_lenght],state[state_nr-1].var[i+os->frame_lenght]);
-	for(int i=0;i<os->frame_lenght;i++)
-	   printf("%f\t%f\t%f\n",os->acc[fr_number][i],state[state_nr-1].mean[i+(os->frame_lenght*2)],state[state_nr-1].var[i+(os->frame_lenght*2)]);
 
 	for (int i = 0; i < os->frame_lenght; i++)
 	{
@@ -325,7 +341,7 @@ float HMM::ViterbiAlg(ObservationSegment * os, int * states_vec, int * mixes)
    lastP = new float[states];
    thisP = new float[states];
 
-  
+ 
    
    for (currState=1; currState < states-1; currState++) {
       tranP = transition[0][currState];
@@ -388,22 +404,7 @@ float HMM::ViterbiAlg(ObservationSegment * os, int * states_vec, int * mixes)
    }  
 
    
-   for (int i = 0; i < os->frames; i++)
-   {
-	   for (int j = 0; j < states; j++)
-	   {
-		   printf("%d\t",trace_back[i][j]);
-
-	   }
-	   printf("\n");
-
-   }
    ComputeTraceBack(os->frames,bestPrevState,states_vec,trace_back);
-
-   
-   
-   
-  
 	for (int i = 0; i < os->frames; i++)
 	{
 		delete[] trace_back[i];
@@ -425,3 +426,118 @@ void HMM::ComputeTraceBack(int frames_in_seg, int state, int * states_vec, short
 }
 
 
+
+
+void HMM::UpdateCounts(ObservationSegment * os, int * state_vec)
+{
+	int state_nr, last;
+	float x;
+	last = 0;
+	for (int i = 0; i < os->frames; i++)
+	{
+		state_nr = state_vec[i];
+		state_nr--;
+		state[state_nr].obs_count++;
+		for (int j = 0; j < os->frame_lenght; j++)
+		{
+			x = os->coef[i][j] - state[state_nr].mean[j];
+			state[state_nr].old_mean[j] += x;
+			state[state_nr].old_var[j] += x*x;
+
+			x = os->delta[i][j] - state[state_nr].mean[j+os->frame_lenght];
+			state[state_nr].old_mean[j+os->frame_lenght] += x;
+			state[state_nr].old_var[j+os->frame_lenght] += x*x;
+
+			x = os->acc[i][j] - state[state_nr].mean[j+(os->frame_lenght*2)];
+			state[state_nr].old_mean[j+(os->frame_lenght*2)] += x;
+			state[state_nr].old_var[j+(os->frame_lenght*2)] += x*x;
+		}
+
+		obs_count[last] += 1.0;
+		trans_count[last][state_nr+1] += 1.0;
+		last = state_nr+1;
+        if (i==os->frames-1){ 
+           obs_count[state_nr+1] += 1.0;
+           trans_count[state_nr+1][states-1] += 1.0;
+        }
+	}
+}
+
+
+void HMM::ResetOldParams(void)
+{
+
+	for(int i=0 ;i<states-2;i++)
+	{
+		for(int j=0;j<vector_size;j++)
+		{
+			state[i].old_mean[j]=0.0;
+			state[i].old_var[j]=0.0;
+		}
+		state[i].obs_count=0;
+	}
+
+	for(int i=0 ;i<states;i++)
+	{
+		obs_count[i] = 0.0;
+		for(int j=0;j<states;j++)
+			trans_count[i][j] = 0;
+	}
+
+}
+
+
+
+void HMM::UpdateMean(void)
+{
+	float x;
+	for (int i = 0; i < states-2; i++)
+	{
+		for (int j = 0; j < vector_size; j++)
+		{
+			x= state[i].mean[j] + state[i].old_mean[j] / state[i].obs_count;
+			state[i].old_mean[j] = state[i].mean[j];
+			state[i].mean[j] = x;
+		}
+
+	}
+}
+
+
+void HMM::UpdateVar(void)
+{
+	float x,z;
+	for (int i = 0; i < states-2; i++)
+	{
+		for (int j = 0; j < vector_size; j++)
+		{
+			x = state[i].mean[j]-state[i].old_mean[j];
+			z = state[i].old_var[j]/state[i].obs_count - x*x;
+			state[i].var[j] = (z<minVar)?minVar:z;
+		}
+	}
+	FindGConst();
+}
+
+
+void HMM::UpdateTransition(void)
+{
+	float sum,x;
+	for (int i = 0; i < states-1; i++)
+	{
+		transition[i][0] = LZERO;
+		sum = 0;
+		for (int j = 1; j < states; j++)
+		{
+			x=trans_count[i][j]/obs_count[i];
+			transition[i][j] = x;
+			sum+=x;
+		}
+		for (int j = 1; j < states; j++)
+		{
+			x = transition[i][j]/sum;
+			transition[i][j] = (x<MINLARG) ? LZERO : log(x);
+		}
+
+	}
+}
