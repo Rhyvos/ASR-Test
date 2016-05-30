@@ -57,7 +57,7 @@ HMM::HMM(int vector_size, int states): vector_size(vector_size), states(states)
 	state = new State[states-2];				// we don't need first and last state mean and variance
 	minVar  = 1.0E-2;
 	epsilon = 1.0E-4;
-
+	minLogExp = -log(-LZERO);
 	for(int i=0 ;i<states-2;i++)
 	{
 		state[i].mean = new float[vector_size];
@@ -540,4 +540,165 @@ void HMM::UpdateTransition(void)
 		}
 
 	}
+}
+
+
+void HMM::ReEstimate(ParamAudio * pa, int iterations, std::string label_name)
+{
+	float ** prob = NULL;
+	int max_obs=0;
+	double ap,bp;
+	for (int i = 0; i < pa->segments; i++)
+	{
+		if(max_obs<pa->os[i].frames)
+			max_obs = pa->os[i].frames;
+	}
+
+	alpha = new double*[states];
+	beta = new double*[states];
+	for (int i = 0; i < states; i++)
+	{
+		alpha[i] = new double[max_obs];
+		beta[i] = new double[max_obs];
+	}
+
+	for (int i = 0; i < iterations; i++)
+	{
+		for (int j = 0; j < pa->segments; j++)
+		{
+			prob = GetProbability(pa->os+j);
+			ap = GetAlpha(prob,pa->os[j].frames);
+			bp = GetBeta(prob,pa->os[j].frames);
+
+
+
+			if(prob != NULL)
+			{
+				for (int i = 0; i < states-2; i++)
+				{
+					if(prob[i])
+						delete[] prob[i];
+				}
+
+				delete[] prob; 
+			}
+		}
+	}
+
+	for (int i = 0; i < states; i++)
+	{
+		delete[] alpha[i];
+		delete[] beta[i];
+	}
+	delete[] alpha;
+	delete[] beta;
+	
+
+}
+
+
+float ** HMM::GetProbability(ObservationSegment * os)
+{
+	float ** prob;
+	prob = new float*[states-2];
+	for (int i = 1; i < states-1; i++)
+	{
+		prob[i-1] = new float[os->frames];
+		for (int j = 0; j < os->frames; j++)
+		{
+			prob[i-1][j] = OutP(os,j,i);
+		}
+	}
+
+	return prob;
+}
+
+
+double HMM::GetAlpha(float ** prob, int frames)
+{
+
+   
+   double x,a;
+
+   alpha[0][0] = 0.0;
+   for (int j=1;j<states-1;j++) {              /* col 1 from entry state */
+      a=transition[0][j];
+      if (a<LSMALL)
+         alpha[j][0] = LZERO;
+      else
+         alpha[j][0] = a+prob[j-1][0];
+   }
+   alpha[states-1][0] = LZERO;
+   
+   for (int t=1;t<frames;t++) {             /* cols 2 to T */
+      for (int j=1;j<states-1;j++) {
+         x=LZERO ;
+         for (int i=1;i<states-1;i++) {
+            a=transition[i][j];
+            if (a>LSMALL)
+               x = LAdd(x,alpha[i][t-1]+a);
+         }
+         alpha[j][t]=x+prob[j-1][t];
+      }
+      alpha[0][t] = alpha[states-1][t] = LZERO;
+   }
+   x = LZERO ;                      /* finally calc seg prob */
+   for (int i=1;i<states-1;i++) {
+      a=transition[i][states-1];
+      if (a>LSMALL)
+         x=LAdd(x,alpha[i][frames-1]+a); 
+   }  
+   alpha[states-1][frames-1] = x;
+   
+   
+   return x;
+}
+
+
+double HMM::LAdd(double x, double y)
+{
+   double temp,diff,z;
+   
+   if (x<y) {
+      temp = x; x = y; y = temp;
+   }
+   diff = y-x;
+   if (diff<minLogExp) 
+      return  (x<LSMALL)?LZERO:x;
+   else {
+      z = exp(diff);
+      return x+log(1.0+z);
+   }
+}
+
+
+double HMM::GetBeta(float ** prob, int frames)
+{
+   double x,a;
+
+   beta[states-1][frames-1] = 0.0;
+   for (int i=1;i<states-1;i++)                /* Col T from exit state */
+      beta[i][frames-1]=transition[i][states-1];
+   beta[0][frames-1] = LZERO;
+   for (int t=frames-2;t>=0;t--) {           /* Col t from col t+1 */
+      for (int i=0;i<states;i++)
+         beta[i][t]=LZERO ;
+      for (int j=1;j<states-1;j++) {
+         x=prob[j-1][t+1]+beta[j][t+1];
+         for (int i=1;i<states-1;i++) {
+            a=transition[i][j];
+            if (a>LSMALL)
+               beta[i][t]=LAdd(beta[i][t],x+a);
+         }
+      }
+   } 
+   x=LZERO ;
+   for (int j=1;j<states-1;j++) {
+      a=transition[0][j];
+      if (a>LSMALL)
+         x=LAdd(x,beta[j][0]+a+prob[j-1][0]); 
+   }
+   beta[0][0] = x;
+  
+   return x;
 }

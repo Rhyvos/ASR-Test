@@ -1,27 +1,22 @@
-﻿Build started 2016-05-29 15:48:39.
+﻿Build started 2016-05-30 17:24:43.
      1>Project "C:\Users\Bartek\Source\Repos\ASR-Test2\Project1\Project1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt MFCC.cpp
-         MFCC.cpp
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(28): warning C4305: '=' : truncation from 'double' to 'float'
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(150): warning C4068: unknown pragma
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(199): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(200): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(207): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(197): warning C4101: 'numChan' : unreferenced local variable
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(229): warning C4244: '*=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(264): warning C4101: 'j' : unreferenced local variable
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(281): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(282): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(284): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(300): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(337): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(345): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(350): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(367): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(368): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(371): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(373): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt HMM.cpp
+         HMM.cpp
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(58): warning C4305: '=' : truncation from 'double' to 'float'
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(59): warning C4305: '=' : truncation from 'double' to 'float'
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(86): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(87): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(90): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(255): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(275): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(278): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(320): warning C4244: 'return' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(366): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(372): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(396): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(400): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(539): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Bartek\Source\Repos\ASR-Test2\Debug\MFCC.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Bartek\Source\Repos\ASR-Test2\Debug\MFCC.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Bartek\Source\Repos\ASR-Test2\Debug\MFCC.lib" /MACHINE:X86 Debug\Audio.obj
          Debug\FFT.obj
@@ -33,4 +28,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:00.71
+Time Elapsed 00:00:00.97

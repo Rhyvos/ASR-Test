@@ -20,6 +20,9 @@ public:
 	int vector_size;
 	float minVar;
 	float epsilon;
+	double ** alpha;
+	double ** beta;
+	double minLogExp;
 public:
 	HMM(char * hmm_src);
 	HMM(int vector_size, int states);
@@ -36,5 +39,10 @@ public:
 	void UpdateMean(void);
 	void UpdateVar(void);
 	void UpdateTransition(void);
+	void ReEstimate(ParamAudio * pa, int iterations, std::string label_name);
+	float ** GetProbability(ObservationSegment * os);
+	double GetAlpha(float ** prob, int frames);
+	double LAdd(double x, double y);
+	double GetBeta(float ** prob, int frames);
 };
 

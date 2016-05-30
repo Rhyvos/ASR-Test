@@ -37,6 +37,7 @@ int main()
 	HMM *hmm = new HMM(36,5);
 
 	hmm->Initialise(pm,10,"S");
+	hmm->ReEstimate(pm,10,"S");
 	for (int i = 0; i < hmm->states-2; i++)
 	{
 		printf("\nState %d:\n",hmm->state[i].state_nr);
