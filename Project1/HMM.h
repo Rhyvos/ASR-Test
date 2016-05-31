@@ -44,5 +44,6 @@ public:
 	double GetAlpha(float ** prob, int frames);
 	double LAdd(double x, double y);
 	double GetBeta(float ** prob, int frames);
+	void UpdateRestCount(float ** prob,ObservationSegment * os,double pr);
 };
 

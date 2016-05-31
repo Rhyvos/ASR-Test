@@ -546,8 +546,10 @@ void HMM::UpdateTransition(void)
 void HMM::ReEstimate(ParamAudio * pa, int iterations, std::string label_name)
 {
 	float ** prob = NULL;
-	int max_obs=0;
+	int max_obs=0,ntu;
 	double ap,bp;
+	float spr,newP,delta,totalP;
+	bool converged = false;
 	for (int i = 0; i < pa->segments; i++)
 	{
 		if(max_obs<pa->os[i].frames)
@@ -556,22 +558,31 @@ void HMM::ReEstimate(ParamAudio * pa, int iterations, std::string label_name)
 
 	alpha = new double*[states];
 	beta = new double*[states];
+
 	for (int i = 0; i < states; i++)
 	{
 		alpha[i] = new double[max_obs];
 		beta[i] = new double[max_obs];
 	}
 
-	for (int i = 0; i < iterations; i++)
+	totalP = LZERO;
+
+	for (int i = 0; !converged && i < iterations; i++)
 	{
+		ResetOldParams();
+		ntu=0;
+		newP=0.0;
 		for (int j = 0; j < pa->segments; j++)
 		{
 			prob = GetProbability(pa->os+j);
-			ap = GetAlpha(prob,pa->os[j].frames);
-			bp = GetBeta(prob,pa->os[j].frames);
-
-
-
+			if ((ap = GetAlpha(prob,pa->os[j].frames))>LSMALL)
+			{
+				bp = GetBeta(prob,pa->os[j].frames);
+				spr= (ap + bp) / 2.0;
+				newP += spr; 
+				ntu++;
+				UpdateRestCount(prob,pa->os+j,spr);
+			}
 			if(prob != NULL)
 			{
 				for (int i = 0; i < states-2; i++)
@@ -583,6 +594,23 @@ void HMM::ReEstimate(ParamAudio * pa, int iterations, std::string label_name)
 				delete[] prob; 
 			}
 		}
+	
+		UpdateMean();
+		UpdateVar();
+		UpdateTransition();
+
+		newP /= ntu;
+		delta = newP - totalP;
+		converged = (i>0) && (fabs(delta) < epsilon);
+		
+		totalP = newP;
+
+		printf("Ave LogProb at iter %d = %10.5f using %d examples",
+			i,totalP,ntu);
+         if (i > 1)
+            printf("  change = %10.5f",delta);
+         printf("\n");
+
 	}
 
 	for (int i = 0; i < states; i++)
@@ -621,7 +649,7 @@ double HMM::GetAlpha(float ** prob, int frames)
    double x,a;
 
    alpha[0][0] = 0.0;
-   for (int j=1;j<states-1;j++) {              /* col 1 from entry state */
+   for (int j=1;j<states-1;j++) {             
       a=transition[0][j];
       if (a<LSMALL)
          alpha[j][0] = LZERO;
@@ -630,7 +658,7 @@ double HMM::GetAlpha(float ** prob, int frames)
    }
    alpha[states-1][0] = LZERO;
    
-   for (int t=1;t<frames;t++) {             /* cols 2 to T */
+   for (int t=1;t<frames;t++) {           
       for (int j=1;j<states-1;j++) {
          x=LZERO ;
          for (int i=1;i<states-1;i++) {
@@ -642,7 +670,7 @@ double HMM::GetAlpha(float ** prob, int frames)
       }
       alpha[0][t] = alpha[states-1][t] = LZERO;
    }
-   x = LZERO ;                      /* finally calc seg prob */
+   x = LZERO ;                      
    for (int i=1;i<states-1;i++) {
       a=transition[i][states-1];
       if (a>LSMALL)
@@ -677,10 +705,10 @@ double HMM::GetBeta(float ** prob, int frames)
    double x,a;
 
    beta[states-1][frames-1] = 0.0;
-   for (int i=1;i<states-1;i++)                /* Col T from exit state */
+   for (int i=1;i<states-1;i++)                
       beta[i][frames-1]=transition[i][states-1];
    beta[0][frames-1] = LZERO;
-   for (int t=frames-2;t>=0;t--) {           /* Col t from col t+1 */
+   for (int t=frames-2;t>=0;t--) {           
       for (int i=0;i<states;i++)
          beta[i][t]=LZERO ;
       for (int j=1;j<states-1;j++) {
@@ -701,4 +729,87 @@ double HMM::GetBeta(float ** prob, int frames)
    beta[0][0] = x;
   
    return x;
+}
+
+
+void HMM::UpdateRestCount(float ** prob,ObservationSegment * os,double pr)
+{
+	
+   double x,y,Lr;
+   float * occr = new float[states-1];
+   occr[0] = 1.0;
+
+   for (int i=1;i<states-1;i++) {
+      x=LZERO ;
+      for (int t=0;t<os->frames;t++)
+         x=LAdd(x,alpha[i][t]+beta[i][t]);
+      x -= pr;
+      if (x>MINEARG) 
+         occr[i] = exp(x);
+      else
+         occr[i] = 0.0;
+   }
+
+   for (int i=1; i<states-1; i++)
+	   obs_count[i] += occr[i];
+
+   for (int j=1;j<states-1;j++) {
+
+	  if (transition[0][j]>LSMALL) {
+         x = transition[0][j] + prob[j-1][0] + beta[j][0] - pr;
+         if (x>MINEARG) {
+            y =  exp(x);
+            trans_count[0][j] += y; obs_count[0] += y;
+         }
+      }
+   }
+   for (int i=1;i<states-1;i++) {       
+      for (int j=1;j<states-1;j++) {
+         if (transition[i][j]>LSMALL) {
+            x=LZERO; 
+            for (int t=0;t<os->frames-1;t++)
+               x=LAdd(x,alpha[i][t]+transition[i][j]+prob[j-1][t+1]+beta[j][t+1]);
+            x -= pr;
+            if (x>MINEARG)
+               trans_count[i][j] += exp(x);
+         }
+      }
+   }
+   for (int i=1; i<states-1; i++) {  
+	  if (transition[i][states-1]>LSMALL) {
+         x = transition[i][states-1] + alpha[i][os->frames-1] - pr;
+         if (x>MINEARG)
+            trans_count[i][states-1] += exp(x);
+      }     
+   }
+
+   for (int i = 1; i < states -1; i++)
+   {
+	   for (int j = 0; j < os->frames; j++)
+	   {
+		   Lr = alpha[i][j]+beta[i][j] - pr;
+		   y = exp(Lr);
+		   state[i-1].obs_count+=y;
+		   for (int k = 0; k < os->frame_lenght; k++)
+		   {
+			    x = os->coef[j][k] - state[i-1].mean[k];
+				state[i-1].old_mean[k] += x * y;
+				state[i-1].old_var[k] += x*x * y;
+
+				x = os->delta[j][k] - state[i-1].mean[k+os->frame_lenght];
+				state[i-1].old_mean[k+os->frame_lenght] += x * y;
+				state[i-1].old_var[k+os->frame_lenght] += x*x * y;
+
+				x = os->acc[j][k] - state[i-1].mean[k+(os->frame_lenght*2)];
+				state[i-1].old_mean[k+(os->frame_lenght*2)] += x * y;
+				state[i-1].old_var[k+(os->frame_lenght*2)] += x*x * y;
+		   }
+
+	   }
+   }
+
+
+
+
+   delete[] occr;
 }
