@@ -12,6 +12,7 @@ public:
 	~HMM(void);
 //private:
 	HMM(void);
+	std::string name;
 	State * state;
 	float ** transition;
 	float * obs_count;				//counts occupation of the state int trans
@@ -23,12 +24,13 @@ public:
 	double ** alpha;
 	double ** beta;
 	double minLogExp;
+	int minimum_duration;
 public:
-	HMM(char * hmm_src);
-	HMM(int vector_size, int states);
-	void Initialise(ParamAudio * pa, int iteration, std::string label_name);
-	void GetMean(ParamAudio * pa, std::string label_name);
-	void GetVariance(ParamAudio * pa, std::string label_name);
+	HMM(std::string hmm_src);
+	HMM(int vector_size, int states, std::string l_name);
+	void Initialise(ParamAudio * pa, int iteration);
+	void GetMean(ParamAudio * pa);
+	void GetVariance(ParamAudio * pa);
 	void FindGConst(void);
 	float OutP(ObservationSegment * os, int fr_number, int state_nr);
 	float ViterbiAlg(ObservationSegment * os, int * state_vec, int * mixes);
@@ -39,11 +41,13 @@ public:
 	void UpdateMean(void);
 	void UpdateVar(void);
 	void UpdateTransition(void);
-	void ReEstimate(ParamAudio * pa, int iterations, std::string label_name);
+	void ReEstimate(ParamAudio * pa, int iterations);
 	float ** GetProbability(ObservationSegment * os);
 	double GetAlpha(float ** prob, int frames);
 	double LAdd(double x, double y);
 	double GetBeta(float ** prob, int frames);
 	void UpdateRestCount(float ** prob,ObservationSegment * os,double pr);
+	void SetMinDuration(void);
+	void FindSO(int * so, int * d, int s);
 };
 

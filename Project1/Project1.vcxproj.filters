@@ -30,6 +30,9 @@
     <ClInclude Include="HMM.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="FinalReEstimate.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCC.cpp">
@@ -45,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="HMM.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FinalReEstimate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

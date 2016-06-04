@@ -40,12 +40,12 @@ HMM::~HMM(void)
 }
 
 
-HMM::HMM(char * hmm_src) //load from file
+HMM::HMM(std::string hmm_src) //load from file
 {
 }
 
 
-HMM::HMM(int vector_size, int states): vector_size(vector_size), states(states)
+HMM::HMM(int vector_size, int states, std::string l_name): vector_size(vector_size), states(states), name(l_name)
 {
 
 	if(states<3 || vector_size<1)
@@ -58,6 +58,7 @@ HMM::HMM(int vector_size, int states): vector_size(vector_size), states(states)
 	minVar  = 1.0E-2;
 	epsilon = 1.0E-4;
 	minLogExp = -log(-LZERO);
+	minimum_duration =-1;
 	for(int i=0 ;i<states-2;i++)
 	{
 		state[i].mean = new float[vector_size];
@@ -97,15 +98,15 @@ HMM::HMM(int vector_size, int states): vector_size(vector_size), states(states)
 }
 
 
-void HMM::Initialise(ParamAudio * pa, int iteration, std::string label_name)
+void HMM::Initialise(ParamAudio * pa, int iteration)
 {
 	float totalP,newP,delta;
 	bool converged = false;   
 	int * states_vec;
 	int * mixes;
 	int j;
-	GetMean(pa,label_name);
-	GetVariance(pa,label_name);
+	GetMean(pa);
+	GetVariance(pa);
 	FindGConst();
 	totalP = LZERO;
 	for (int i = 0; !converged && i < iteration; i++)
@@ -113,7 +114,7 @@ void HMM::Initialise(ParamAudio * pa, int iteration, std::string label_name)
 		ResetOldParams();
 		for (j = 0, newP = 0; j < pa->segments; j++)
 		{
-			if(!pa->os[j].l->name.compare(label_name))
+			if(!pa->os[j].l->name.compare(name))
 			{
 				states_vec = new int[pa->os[j].frames];
 				mixes = new int[pa->os[j].frames];
@@ -141,7 +142,7 @@ void HMM::Initialise(ParamAudio * pa, int iteration, std::string label_name)
 }
 
 
-void HMM::GetMean(ParamAudio * pa, std::string label_name)
+void HMM::GetMean(ParamAudio * pa)
 {
 	int statenumber=0;
 	float frames_per_state;
@@ -154,7 +155,7 @@ void HMM::GetMean(ParamAudio * pa, std::string label_name)
 
 	for(int i=0;i<pa->segments;i++)
 	{
-		if(pa->os[i].l == NULL || !pa->os[i].l->name.compare(label_name))
+		if(pa->os[i].l == NULL || !pa->os[i].l->name.compare(name))
 		{
 			frames_per_state = (float)pa->os[i].frames/(float)(states-2);
 			for (int j= 0; j < pa->os[i].frames; j++)
@@ -191,7 +192,7 @@ void HMM::GetMean(ParamAudio * pa, std::string label_name)
 
 
 
-void HMM::GetVariance(ParamAudio * pa, std::string label_name)
+void HMM::GetVariance(ParamAudio * pa)
 {
 	int statenumber=0;
 	float frames_per_state;
@@ -212,7 +213,7 @@ void HMM::GetVariance(ParamAudio * pa, std::string label_name)
 
 	for(int i=0;i<pa->segments;i++)
 	{
-		if(pa->os[i].l == NULL || !pa->os[i].l->name.compare(label_name))
+		if(pa->os[i].l == NULL || !pa->os[i].l->name.compare(name))
 		{
 			frames_per_state = (float)pa->os[i].frames/(float)(states-2);
 			for (int j= 0; j < pa->os[i].frames; j++)
@@ -543,7 +544,7 @@ void HMM::UpdateTransition(void)
 }
 
 
-void HMM::ReEstimate(ParamAudio * pa, int iterations, std::string label_name)
+void HMM::ReEstimate(ParamAudio * pa, int iterations)
 {
 	float ** prob = NULL;
 	int max_obs=0,ntu;
@@ -574,24 +575,28 @@ void HMM::ReEstimate(ParamAudio * pa, int iterations, std::string label_name)
 		newP=0.0;
 		for (int j = 0; j < pa->segments; j++)
 		{
-			prob = GetProbability(pa->os+j);
-			if ((ap = GetAlpha(prob,pa->os[j].frames))>LSMALL)
+			if(!pa->os[j].l->name.compare(name))
 			{
-				bp = GetBeta(prob,pa->os[j].frames);
-				spr= (ap + bp) / 2.0;
-				newP += spr; 
-				ntu++;
-				UpdateRestCount(prob,pa->os+j,spr);
-			}
-			if(prob != NULL)
-			{
-				for (int i = 0; i < states-2; i++)
+				prob = GetProbability(pa->os+j);
+				
+				if ((ap = GetAlpha(prob,pa->os[j].frames))>LSMALL)
 				{
-					if(prob[i])
-						delete[] prob[i];
+					bp = GetBeta(prob,pa->os[j].frames);
+					spr= (ap + bp) / 2.0;
+					newP += spr; 
+					ntu++;
+					UpdateRestCount(prob,pa->os+j,spr);
 				}
+				if(prob != NULL)
+				{
+					for (int i = 0; i < states-2; i++)
+					{
+						if(prob[i])
+							delete[] prob[i];
+					}
 
-				delete[] prob; 
+					delete[] prob; 
+				} 
 			}
 		}
 	
@@ -607,7 +612,7 @@ void HMM::ReEstimate(ParamAudio * pa, int iterations, std::string label_name)
 
 		printf("Ave LogProb at iter %d = %10.5f using %d examples",
 			i,totalP,ntu);
-         if (i > 1)
+         if (i >= 1)
             printf("  change = %10.5f",delta);
          printf("\n");
 
@@ -812,4 +817,52 @@ void HMM::UpdateRestCount(float ** prob,ObservationSegment * os,double pr)
 
 
    delete[] occr;
+}
+
+
+
+void HMM::SetMinDuration(void)
+{
+	int *md;
+	int *so;
+	int nds,k,i,d;
+
+	md = new int[states];
+	so = new int[states];
+
+	for (i=0,nds=0;i<states;i++) so[i]=md[i]=-1;
+	FindSO(md,&nds,states-1);
+	for (i=0;i<nds;i++) so[md[i]]=i;
+    for (i=0;i<states;i++) md[i]=states-1;
+    for (k=0,md[0]=0;k<nds;k++) {
+         i=so[k];
+         if (i<0 || i>=states)  continue;
+         /* Find minimum duration to state i */
+         for (int j=0;j<states-1;j++)
+			 if (transition[j][i]>LSMALL) {
+               d=md[j]+((i==states-1)?0:1);
+               if (d<md[i]) md[i]=d;
+            }
+    }
+	if (md[states-1]<0 || md[states-1]>=states) {
+		fprintf(stderr,"SetMinDurs: Transition matrix with discontinuity");
+		minimum_duration = (transition[0][states-1]>LSMALL ? 0 : 1 ); 
+    }
+    else
+		minimum_duration = md[states-1];
+
+	delete[] md;
+	delete[] so;
+}
+
+
+void HMM::FindSO(int * so, int * d, int s)
+{
+   so[s]=0; 
+   for (int p=0;p<states-1;p++) { 
+      if (transition[p][s]>LSMALL && p!=s)
+         if (so[p]<0) 
+            FindSO(so,d,p);
+   }
+   so[s]=++(*d)-1; 
 }

@@ -36,13 +36,11 @@ Audio::~Audio(void)
 ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_src)
 {
 	FILE * audio;
+
 	audio = fopen(audio_src,"rb");
-    FILE * label;
-	label = fopen(label_src,"rb");
+	
 	if(!audio)
 	{
-		if(label)
-			fclose(label);
 		fprintf(stderr,"Can't open file: %s\n",audio_src);
 		return NULL;
 	}
@@ -109,13 +107,16 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	
 	mfcc->AddRegression(coef,delta,frame_index,cep_number,regression_window);
 	mfcc->AddRegression(delta,acc,frame_index,cep_number,regression_window);
-
+	
 	std::vector<Label*> Labels = ExtractLabels(label_src);
 	
 	if(Labels.size() <= 0)
 	{
 		fprintf(stderr,"Bad label file: %s, proceed segmentation without label file\n",label_src);
-		pm->laber_scr = label_src;
+		if(label_src != NULL)
+			pm->laber_scr = label_src;
+		else 
+			pm->laber_scr = "";
 		pm->audio_src = audio_src;
 
 		pm->segments = 1;											//because only one segment with whole audio params
@@ -134,7 +135,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		pm->os[0].acc = acc;
 		pm->os[0].frame_lenght = cep_number;
 		pm->os[0].frames = frames;
-		pm->os[0].l = NULL;
+		pm->os[0].l = new Label("",0,0);
 	}
 	else
 	{
@@ -198,8 +199,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 
 	if(audio)
 		fclose(audio);
-	if(label)
-		fclose(label);
+
 
 
 	delete[] buffer_array;
@@ -221,9 +221,13 @@ std::vector<std::string> split(char * str,const char * delimiter) {
 
 std::vector<Label*> Audio::ExtractLabels(const char * label_src)
 {
+	std::vector<Label*> output;
+	if(label_src == NULL)
+		return output;
+
 	std::ifstream input(label_src);
 	std::vector<std::string> split_buffer;
-	std::vector<Label*> output;
+	
 	int start,end;
 	int index=0;
 	char buffer[256];

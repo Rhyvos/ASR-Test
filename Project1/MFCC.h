@@ -29,4 +29,5 @@ private:
 public:
 	void WeightCepstrum(float * input , int n);
 	void GenCepLift(int CepLift, int n);
+//	void SetMinDuration(void);
 };

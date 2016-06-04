@@ -50,10 +50,11 @@ struct ParamAudio
 	std::string audio_src;
 	std::string laber_scr;
 	Wav audio_header;
-	float ** coef_first;			//ptr on first element just for correct deleting
+	float ** coef_first;			//ptr on first element just for correct deleting and used in final reestimation
 	float ** delta_first;
 	float ** acc_first;
 	int param_frames;
+	int coef_num;
 	~ParamAudio()
 	{
 	for(int i=0;i<segments;i++){

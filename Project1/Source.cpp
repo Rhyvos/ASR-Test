@@ -32,12 +32,17 @@ int main()
 
 	Audio audio;
 	ParamAudio *pm=audio.ParamAudioFile("a1.wav","a1.lab");
-	
+	ParamAudio *pm1=audio.ParamAudioFile("a1.wav",NULL);
 
-	HMM *hmm = new HMM(36,5);
+	HMM *hmm = new HMM(36,5,"S");
 
-	hmm->Initialise(pm,10,"S");
-	hmm->ReEstimate(pm,10,"S");
+	hmm->Initialise(pm,10);
+	hmm->minVar = 0.05;
+	hmm->ReEstimate(pm,10);
+	hmm->SetMinDuration();
+	//hmm->ReEstimate(pm1,1,"");
+	//hmm->ReEstimate(pm1,1,"");
+	//hmm->ReEstimate(pm1,1,"");
 	for (int i = 0; i < hmm->states-2; i++)
 	{
 		printf("\nState %d:\n",hmm->state[i].state_nr);
@@ -67,6 +72,7 @@ int main()
 	}
 	
 	delete pm;
+	delete pm1;
 	delete hmm;
 	
 	/*for(int i=0; i<300; i++)
