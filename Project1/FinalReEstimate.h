@@ -7,7 +7,13 @@ public:
 	FinalReEstimate(void);
 	~FinalReEstimate(void);
 	std::vector<HMM *> hmms;
+	HMM ** hmm_seq;							//list of hmms ordered by apperence at label file
 	void AddHmm(HMM *  hmm);
 	void LoadHmm(std::string hmm_src);
+	void ForwardBackward(ParamAudio * pa);
+	int *qHi;
+	int *qLo;
+	void ListHmms(ParamAudio * pa);
+	void SetBeamTaper(int q, int t);
 };
 

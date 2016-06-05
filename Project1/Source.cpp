@@ -17,7 +17,7 @@
 #include <vector>
 #include "Audio.h"
 #include "hmm.h"
-
+#include "FinalReEstimate.h"
 //#define _CRT_SECURE_NO_DEPRECATE
 #pragma warning (disable : 4996)
 using namespace std;
@@ -35,11 +35,12 @@ int main()
 	ParamAudio *pm1=audio.ParamAudioFile("a1.wav",NULL);
 
 	HMM *hmm = new HMM(36,5,"S");
-
+	FinalReEstimate *fre = new FinalReEstimate();
 	hmm->Initialise(pm,10);
 	hmm->minVar = 0.05;
 	hmm->ReEstimate(pm,10);
-	hmm->SetMinDuration();
+	fre->AddHmm(hmm);
+	fre->ForwardBackward(pm);
 	//hmm->ReEstimate(pm1,1,"");
 	//hmm->ReEstimate(pm1,1,"");
 	//hmm->ReEstimate(pm1,1,"");
