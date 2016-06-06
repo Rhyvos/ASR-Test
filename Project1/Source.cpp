@@ -75,7 +75,7 @@ int main()
 	delete pm;
 	delete pm1;
 	delete hmm;
-	
+	delete fre;
 	/*for(int i=0; i<300; i++)
 			{
 				printf("buffer_array[%d] = buffer_array[%d];\n",i,400 - 300 + i);

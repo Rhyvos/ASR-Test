@@ -126,6 +126,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		pm->delta_first = delta;
 		pm->acc_first = acc;
 		pm->param_frames = frames;
+		pm->coef_num = cep_number;
 		int sample_delta = Second/pm->audio_header.SampleRate;
 		int i=0;
 		pm->os = new ObservationSegment[pm->segments];
@@ -148,6 +149,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		pm->delta_first = delta;
 		pm->acc_first = acc;
 		pm->param_frames = frames;
+		pm->coef_num = cep_number;
 		int sample_delta = Second/pm->audio_header.SampleRate;
 		int i=0;
 		pm->os = new ObservationSegment[pm->segments];
