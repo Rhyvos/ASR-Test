@@ -17,7 +17,6 @@ FinalReEstimate::FinalReEstimate(void)
 
 FinalReEstimate::~FinalReEstimate(void)
 {
-	delete[] hmm_seq;
 }
 
 
@@ -456,7 +455,7 @@ void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, dou
    while (pr-MaxModelProb(sq,t-1,sq)>minFrwdP){
       ++sq;                /* raise start point */
       if (sq>=qHi[t]) 
-         fprintf(stderr,"StepAlpha: Alpha prune failed sq(%d) > qHi(%d)",sq,qHi[t]);
+         fprintf(stderr,"StepAlpha: Alpha prune failed sq(%d) > qHi(%d)\n",sq,qHi[t]);
    }
    if (sq<qLo[t])       /* start-point below beta beam so pull it back */
       sq = qLo[t];
@@ -468,7 +467,7 @@ void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, dou
    while (pr-MaxModelProb(eq,t-1,sq)>minFrwdP){
       --eq;             /* lower end-point */
       if (eq<sq) 
-         fprintf(stderr,"StepAlpha: Alpha prune failed eq(%d) < sq(%d)",eq,sq);
+         fprintf(stderr,"StepAlpha: Alpha prune failed eq(%d) < sq(%d)\n",eq,sq);
    }
    while (eq<Q && hmm_seq[eq]->minimum_duration==0) eq++;
    if (eq>qHi[t])  /* end point above beta beam so pull it back */
@@ -519,7 +518,7 @@ void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, dou
    
    if (t==T){
       if (fabs((x-pr)/T) > 0.001)
-         fprintf(stderr,"StepAlpha: Forward/Backward Disagree %f/%f",x,pr);
+         fprintf(stderr,"StepAlpha: Forward/Backward Disagree %f/%f\n",x,pr);
       
    }
 
@@ -688,4 +687,5 @@ void FinalReEstimate::FreeMemory(void)
 	delete[] occt;
 	delete[] qHi;
 	delete[] qLo;
+	delete[] hmm_seq;
 }

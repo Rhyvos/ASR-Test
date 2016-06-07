@@ -42,6 +42,10 @@ int main()
 	fre->AddHmm(hmm);
 	fre->ForwardBackward(pm);
 	fre->UpdateModels();
+	fre->ForwardBackward(pm);
+	fre->UpdateModels();
+	fre->ForwardBackward(pm);
+	fre->UpdateModels();
 	//hmm->ReEstimate(pm1,1,"");
 	//hmm->ReEstimate(pm1,1,"");
 	//hmm->ReEstimate(pm1,1,"");
@@ -64,11 +68,11 @@ int main()
 
 	}
 	printf("\n");
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i <hmm->states; i++)
 	{
-		for (int j = 0; j < 5; j++)
+		for (int j = 0; j < hmm->states; j++)
 		{
-			printf("%f\t",exp(hmm->transition[i][j]));
+			printf("%f ",exp(hmm->transition[i][j]));
 		}
 		printf("\n");
 	}

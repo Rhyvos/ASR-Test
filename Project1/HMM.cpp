@@ -114,7 +114,7 @@ void HMM::Initialise(ParamAudio * pa, int iteration)
 		ResetOldParams();
 		for (j = 0, newP = 0; j < pa->segments; j++)
 		{
-			if(!pa->os[j].l->name.compare(name))
+			if(!pa->os[j].l->name.compare(name) && pa->os[j].frames >= states-2)
 			{
 				states_vec = new int[pa->os[j].frames];
 				mixes = new int[pa->os[j].frames];
@@ -124,7 +124,9 @@ void HMM::Initialise(ParamAudio * pa, int iteration)
 				delete[] mixes;
 				delete[] states_vec;
 			}
-			
+
+			if(pa->os[j].frames < states-2)
+				fprintf(stderr,"HMM::Initialise():Segment(%d) dont have enough frames(%d), minimum frames=%d\n",j,pa->os[j].frames,states-2);
 		}
 		newP /= pa->segments;
 		delta = newP - totalP;
