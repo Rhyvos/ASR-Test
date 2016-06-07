@@ -41,6 +41,7 @@ int main()
 	hmm->ReEstimate(pm,10);
 	fre->AddHmm(hmm);
 	fre->ForwardBackward(pm);
+	fre->UpdateModels();
 	//hmm->ReEstimate(pm1,1,"");
 	//hmm->ReEstimate(pm1,1,"");
 	//hmm->ReEstimate(pm1,1,"");

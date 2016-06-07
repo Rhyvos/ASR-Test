@@ -1,3 +1,10 @@
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new DEBUG_NEW
+#endif
 #include "FinalReEstimate.h"
 
 
@@ -10,6 +17,7 @@ FinalReEstimate::FinalReEstimate(void)
 
 FinalReEstimate::~FinalReEstimate(void)
 {
+	delete[] hmm_seq;
 }
 
 
@@ -18,6 +26,8 @@ void FinalReEstimate::AddHmm(HMM *  hmm)
 	hmms.push_back(hmm);
 	if(hmm->minimum_duration < 0)
 		hmm->SetMinDuration();
+	
+	hmm->ResetOldParams();
 }
 
 
@@ -35,7 +45,8 @@ void FinalReEstimate::ForwardBackward(ParamAudio * pa)
 	SetBeamTaper(pa->segments,pa->param_frames);
 	outprob = GetProbability(pa);
 	pr = Beta();
-	Alpha();
+	Alpha(pa);
+	FreeMemory();
 }
 
 
@@ -124,6 +135,10 @@ float *** FinalReEstimate::GetProbability(ParamAudio * pa)
 				{
 					tmp[t][i][k] = OutP(pa,t,i,k);
 				}
+			}
+			else
+			{
+				tmp[t][i] = NULL;
 			}
 		} 
 	}
@@ -265,17 +280,20 @@ double FinalReEstimate::Beta(void)
          lst = st; a1N = hmm->transition[1][st];
       }
       while (gMax-maxP[startq] > pruneThresh) {
+		 delete[] beta[t][startq];
          beta[t][startq] = NULL;
          --startq;                   /* lower startq till thresh reached */
          if (startq<0) fprintf(stderr,"SetBeta: Beta prune failed sq < 1\n");
       }
       while(qHi[t]<startq) {        /* On taper */
-         beta[t][startq] = NULL;
+         delete[] beta[t][startq];
+		 beta[t][startq] = NULL;
          --startq;                   /* lower startq till thresh reached */
          if (startq<0) fprintf(stderr,"SetBeta: Beta prune failed on taper sq < 1\n");
       }
      qHi[t] = startq;
       while (gMax-maxP[endq]>pruneThresh){
+		 delete[] beta[t][endq];
          beta[t][endq] = NULL;
          ++endq;                   /* raise endq till thresh reached */
          if (endq>startq) {
@@ -285,20 +303,22 @@ double FinalReEstimate::Beta(void)
       qLo[t] = endq;
    
    }
-
+	delete[] maxP;
 	return bqt[0];
 }
 
 
-double FinalReEstimate::Alpha(void)
+void FinalReEstimate::Alpha(ParamAudio * pa)
 {
 	int endq,st,startq;
 	HMM * hmm;
 	double x,a,a1N=0.0;
 	double * aq, ** tmp, *laq;
-	int sq,eq,i,j,q,Nq,lNq;
+	int sq,eq,i,j,q,Nq,lNq,maxn=0;
 	double y;
+	double *aqt, * bqt, *bq1t, *bqt1, *aqt1;
 
+	
 	
 	alphat= new double*[seq_num];
 	for (int j = 0; j < seq_num; j++)
@@ -310,7 +330,14 @@ double FinalReEstimate::Alpha(void)
 	{
 		alphat1[j] = new double[hmm_seq[j]->states];
 	}
-
+	for (int i = 0; i < hmms.size(); i++)
+	{
+		if (hmms[i]->states > maxn)
+		{
+			maxn = hmms[i]->states;
+		}
+	}
+	occt = new float[maxn];
 
 
 	startq = 0;
@@ -346,29 +373,22 @@ double FinalReEstimate::Alpha(void)
 		  StepAlpha(t,&startq,&endq,seq_num-1,frames-1,pr);
     
       for (int q=startq;q<=endq;q++) { 
-         /* increment accs for each active model
-         al_hmm = hmm_seq[q];
-         up_hmm = up_qList[q];
+         /* increment accs for each active model */
+         hmm = hmm_seq[q];
+         //up_hmm = up_qList[q];
          aqt = alphat[q];
          bqt = beta[t][q];
-         bqt1 = (t==utt->T) ? NULL:beta[t+1][q];
+         bqt1 = (t==frames-1) ? NULL:beta[t+1][q];
          aqt1 = (t==1)      ? NULL:alphat1[q];
-         bq1t = (q==utt->Q) ? NULL:beta[t][q+1];
-         SetOcct(al_hmm,q,occt,occa,aqt,bqt,bq1t,utt->pr);
-         /* accumulate the statistics 
-         if (fbInfo->uFlags&(UPMEANS|UPVARS|UPMIXES|UPXFORM))
-            UpMixParms(fbInfo,q,up_hmm,al_hmm,utt->ot,utt->ot2,t,aqt,aqt1,bqt,
-                       utt->S, utt->twoDataFiles, utt->pr);
-         if (fbInfo->uFlags&UPTRANS)
-            UpTranParms(fbInfo,up_hmm,t,q,aqt,bqt,bqt1,bq1t,utt->pr);*/
+		 bq1t = (q==seq_num-1) ? NULL:beta[t][q+1];
+         SetOcct(hmm,q,aqt,bqt,bq1t,pr);
+         
+         UpdateParms(hmm,pa,t,aqt,bqt,pr);
+   
+         UpdateTransitionParams(hmm,t,q,aqt,bqt,bqt1,bq1t,pr);
       } 
     
    }
-
-
-
-
-	return 0;
 }
 
 
@@ -520,4 +540,152 @@ void FinalReEstimate::ZeroAlpha(int qlo, int qhi)
       for (j=0;j<=Nq;j++)
          aq[j] = LZERO;
    }
+}
+
+
+void FinalReEstimate::SetOcct(HMM * hmm , int q, double * aqt, double * bqt, double * bq1t, double pr)
+{
+	int i,N;
+   double x;
+ 
+   
+   N=hmm->states-1;
+   for (i=0;i<=N;i++) {
+      x = aqt[i]+bqt[i];
+      if (i==1 && bq1t != NULL && hmm->transition[0][N] > LSMALL)
+		  x = LAdd(x,aqt[0]+bq1t[0]+hmm->transition[0][N]);
+      x -= pr;
+      occt[i] = (x>MINEARG) ? exp(x) : 0.0;
+   }
+   
+}
+
+
+void FinalReEstimate::UpdateTransitionParams(HMM *  hmm, int t, int q, double * aqt , double * bqt , double * bqt1 , double * bq1t , double pr)
+{
+   int i,j,N;
+   float *ti, *ai;
+   float *outprob1;
+   double sum,x;
+   
+
+   N = hmm->states-1;
+   if (bqt1!=NULL) outprob1 = outprob[t+1][q];  /* Bug fix */
+   else outprob1 = NULL;
+   for (i=0;i<N;i++)
+      hmm->obs_count[i] += occt[i];
+   for (i=0;i<N;i++) {
+	   ti = hmm->trans_count[i]; ai = hmm->transition[i];
+      for (j=1;j<=N;j++) {
+         if (i==0 && j<N) {                  /* entry transition */
+            x = aqt[0]+ai[j]+outprob[t][q][j-1]+bqt[j]-pr;
+            if (x>MINEARG) ti[j] += exp(x);
+         } else
+            if (i>0 && j<N && bqt1!=NULL) {     /* internal transition */
+               x = aqt[i]+ai[j]+outprob1[j-1]+bqt1[j]-pr;
+               if (x>MINEARG) ti[j] += exp(x);
+            } else
+               if (i>0 && j==N) {                  /* exit transition */
+                  x = aqt[i]+ai[N]+bqt[N]-pr;
+                  if (x>MINEARG) ti[N] += exp(x);
+               }
+         if (i==0 && j==N && ai[N]>LSMALL && bq1t != NULL){ /* tee transition */
+            x = aqt[0]+ai[N]+bq1t[0]-pr;
+            if (x>MINEARG) ti[N] += exp(x);
+         }
+      }
+   }
+}
+
+
+void FinalReEstimate::UpdateParms(HMM *  hmm, ParamAudio *  pa, int t, double * aqt, double * bqt, double pr)
+{
+   int N;
+   double x, Lr,z ;
+   float *var, *mn;
+   N = hmm->states-1;
+   for (int j=1;j<N;j++) 
+   {
+	  x = aqt[j]+bqt[j]-pr; 
+         if (-x<minFrwdP) 
+		 {
+                 Lr = exp(x);
+                 hmm->state[j-1].obs_count += Lr;
+				 mn = hmm->state[j-1].old_mean;
+				 var = hmm->state[j-1].old_var;
+				 for (int k=0;k<pa->coef_num;k++) 
+				 {
+					x=pa->coef_first[t][k]-hmm->state[j-1].mean[k];
+					mn[k] += x;
+                    var[k] += x*x*Lr;
+
+					x=pa->delta_first[t][k]-hmm->state[j-1].mean[k+pa->coef_num];
+					mn[k+pa->coef_num] += x;
+                    var[k+pa->coef_num] += x*x*Lr;
+
+					x=pa->acc_first[t][k]-hmm->state[j-1].mean[k+(pa->coef_num*2)];
+					mn[k+(pa->coef_num*2)] += x;
+                    var[k+(pa->coef_num*2)] += x*x*Lr;
+				 }
+          }
+      }
+}
+
+
+
+void FinalReEstimate::UpdateModels(void)
+{
+	for (int i = 0; i < hmms.size(); i++)
+	{
+		hmms[i]->UpdateMean();
+		hmms[i]->UpdateVar();
+		hmms[i]->UpdateTransition();
+	}
+}
+
+
+void FinalReEstimate::FreeMemory(void)
+{
+
+	for (int j = 0; j < seq_num; j++)
+	{
+		delete[] alphat[j];
+	}
+
+	for (int j = 0; j < seq_num; j++)
+	{
+		delete[] alphat1[j];
+	}
+
+	for (int i = 0; i < frames; i++)
+	{
+		for (int j = 0; j < seq_num; j++)
+		{
+			if (outprob[i][j]!=NULL)
+			{
+				delete[] outprob[i][j];
+			}
+			
+		}
+		delete[] outprob[i];
+	}
+
+	
+	for (int i = 0; i < frames; i++)
+	{
+		
+		for (int j = 0; j < seq_num; j++)
+		{
+			delete[] beta[i][j];
+		}
+		delete beta[i];
+	}
+
+	delete[] beta;
+	delete[] outprob;
+	delete[] alphat;
+	delete[] alphat1;
+	delete[] occt;
+	delete[] qHi;
+	delete[] qLo;
 }
