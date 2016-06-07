@@ -10,11 +10,14 @@ public:
 	HMM ** hmm_seq;							//list of hmms ordered by apperence at label file
 	
 	float *** outprob;
-	double *** alpha;
+	double ** alphat;
+	double ** alphat1;
 	double *** beta;
 	int frames;
 	int seq_num;
 	double pruneThresh;
+	double pr;
+	float minFrwdP; 
 	void AddHmm(HMM *  hmm);
 	void LoadHmm(std::string hmm_src);
 	void ForwardBackward(ParamAudio * pa);
@@ -27,5 +30,8 @@ public:
 	double Beta(void);
 	double Alpha(void);
 	double LAdd(double x, double y);
+	double MaxModelProb(int q, int t, int minq);
+	void StepAlpha(int t, int * start, int * end, int Q, int T, double pr);
+	void ZeroAlpha(int qlo, int qhi);
 };
 

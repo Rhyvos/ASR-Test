@@ -1,9 +1,20 @@
-﻿Build started 2016-06-06 15:54:22.
+﻿Build started 2016-06-07 11:29:11.
      1>Project "C:\Users\Bartek\Source\Repos\ASR-Test2\Project1\Project1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt Source.cpp
-         Source.cpp
-     1>c:\users\bartek\source\repos\asr-test2\project1\source.cpp(40): warning C4305: '=' : truncation from 'double' to 'float'
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt FinalReEstimate.cpp
+         FinalReEstimate.cpp
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(49): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(174): warning C4244: 'return' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(298): warning C4101: 'laq' : unreferenced local variable
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(300): warning C4101: 'y' : unreferenced local variable
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(299): warning C4101: 'lNq' : unreferenced local variable
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(299): warning C4101: 'Nq' : unreferenced local variable
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(299): warning C4101: 'i' : unreferenced local variable
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(299): warning C4101: 'sq' : unreferenced local variable
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(298): warning C4101: 'tmp' : unreferenced local variable
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(299): warning C4101: 'q' : unreferenced local variable
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(299): warning C4101: 'eq' : unreferenced local variable
+     1>c:\users\bartek\source\repos\asr-test2\project1\finalreestimate.cpp(299): warning C4101: 'j' : unreferenced local variable
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Bartek\Source\Repos\ASR-Test2\Debug\MFCC.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Bartek\Source\Repos\ASR-Test2\Debug\MFCC.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Bartek\Source\Repos\ASR-Test2\Debug\MFCC.lib" /MACHINE:X86 Debug\Audio.obj
          Debug\FFT.obj
@@ -16,4 +27,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.04
+Time Elapsed 00:00:00.99

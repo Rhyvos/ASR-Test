@@ -4,6 +4,7 @@
 FinalReEstimate::FinalReEstimate(void)
 {
 	pruneThresh = 2000.0;
+    minFrwdP = 10.0; 
 }
 
 
@@ -33,7 +34,8 @@ void FinalReEstimate::ForwardBackward(ParamAudio * pa)
 	ListHmms(pa);
 	SetBeamTaper(pa->segments,pa->param_frames);
 	outprob = GetProbability(pa);
-	printf("Beta=%f\n",Beta());
+	pr = Beta();
+	Alpha();
 }
 
 
@@ -290,6 +292,82 @@ double FinalReEstimate::Beta(void)
 
 double FinalReEstimate::Alpha(void)
 {
+	int endq,st,startq;
+	HMM * hmm;
+	double x,a,a1N=0.0;
+	double * aq, ** tmp, *laq;
+	int sq,eq,i,j,q,Nq,lNq;
+	double y;
+
+	
+	alphat= new double*[seq_num];
+	for (int j = 0; j < seq_num; j++)
+	{
+		alphat[j] = new double[hmm_seq[j]->states];
+	}
+	alphat1= new double*[seq_num];
+	for (int j = 0; j < seq_num; j++)
+	{
+		alphat1[j] = new double[hmm_seq[j]->states];
+	}
+
+
+
+	startq = 0;
+	endq = qHi[0];
+   for (int q=0; q<=endq; q++)
+   {
+	  hmm = hmm_seq[q]; 
+	  st = hmm->states-1;
+      aq = alphat[q];
+      aq[0] = (q==0)?0.0:alphat[q-1][0]+a1N;
+      
+      for (int j=1;j<st;j++) {
+		  a = hmm->transition[0][j];
+         aq[j] = (a>LSMALL)?aq[0]+a+outprob[0][q][j-1]:LZERO;
+      }
+      x = LZERO;
+      for (int i=1;i<st;i++) {
+		  a = hmm->transition[i][st];
+         if (a>LSMALL)
+            x = LAdd(x,aq[i]+a);
+      }
+      aq[st] = x;
+      a1N = hmm->transition[0][st];
+   }
+
+
+	for (int t=0;t<frames;t++) {
+
+
+      
+
+      if (t>0)
+		  StepAlpha(t,&startq,&endq,seq_num-1,frames-1,pr);
+    
+      for (int q=startq;q<=endq;q++) { 
+         /* increment accs for each active model
+         al_hmm = hmm_seq[q];
+         up_hmm = up_qList[q];
+         aqt = alphat[q];
+         bqt = beta[t][q];
+         bqt1 = (t==utt->T) ? NULL:beta[t+1][q];
+         aqt1 = (t==1)      ? NULL:alphat1[q];
+         bq1t = (q==utt->Q) ? NULL:beta[t][q+1];
+         SetOcct(al_hmm,q,occt,occa,aqt,bqt,bq1t,utt->pr);
+         /* accumulate the statistics 
+         if (fbInfo->uFlags&(UPMEANS|UPVARS|UPMIXES|UPXFORM))
+            UpMixParms(fbInfo,q,up_hmm,al_hmm,utt->ot,utt->ot2,t,aqt,aqt1,bqt,
+                       utt->S, utt->twoDataFiles, utt->pr);
+         if (fbInfo->uFlags&UPTRANS)
+            UpTranParms(fbInfo,up_hmm,t,q,aqt,bqt,bqt1,bq1t,utt->pr);*/
+      } 
+    
+   }
+
+
+
+
 	return 0;
 }
 
@@ -307,5 +385,139 @@ double FinalReEstimate::LAdd(double x, double y)
    else {
       z = exp(diff);
       return x+log(1.0+z);
+   }
+}
+
+
+double FinalReEstimate::MaxModelProb(int q, int t, int minq)
+{
+	double *aq,*bq,*bq1;
+   double maxP,x;
+   int Nq1,Nq,i,qx,qx1;
+   HMM * hmm;
+   
+   if (q==0)
+      maxP = LZERO;
+   else {
+	   bq1 = beta[t][q-1]; Nq1 = hmm_seq[q-1]->states-1;
+      maxP = (bq1==NULL)?LZERO:alphat[q-1][Nq1] + bq1[Nq1];
+	  for (qx=q-1;qx>minq && hmm_seq[qx]->transition[1][Nq1] > LSMALL;qx--){
+         qx1 = qx-1;
+		 bq1 = beta[t][qx1]; Nq1 = hmm_seq[qx1]->states-1;
+         x=(bq1==NULL)?LZERO:alphat[qx1][Nq1]+bq1[Nq1];
+         if (x > maxP) maxP = x;
+      }
+   }
+   hmm = hmm_seq[q]; Nq = hmm->states-1;   
+   bq=beta[t][q];
+   if (bq != NULL) {
+      aq = alphat[q]; 
+      for (i=0;i<Nq;i++)
+         if ((x=aq[i]+bq[i]) > maxP) maxP = x;
+   }
+   return maxP;
+}
+
+
+void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, double pr)
+{
+   double *aq,*laq,**tmp, **alphat,**alphat1;
+   int sq,eq,i,j,q,Nq,lNq;
+   double x=0.0,y,a,a1N=0.0;
+   HMM * hmm;
+   
+   alphat  = this->alphat;
+   alphat1 = this->alphat1;
+
+   /* First prune beta beam further to get alpha beam */
+   
+   sq = qLo[t-1];    /* start start-point at bottom of beta beam at t-1 */
+
+   while (pr-MaxModelProb(sq,t-1,sq)>minFrwdP){
+      ++sq;                /* raise start point */
+      if (sq>=qHi[t]) 
+         fprintf(stderr,"StepAlpha: Alpha prune failed sq(%d) > qHi(%d)",sq,qHi[t]);
+   }
+   if (sq<qLo[t])       /* start-point below beta beam so pull it back */
+      sq = qLo[t];
+   
+   eq = qHi[t-1]<Q?qHi[t-1]+1:qHi[t-1];
+   /* start end-point at top of beta beam at t-1  */
+   /* JJO : + 1 to allow for state q-1[N] -> q[1] */
+   /*       + 1 for each tee model following eq.  */
+   while (pr-MaxModelProb(eq,t-1,sq)>minFrwdP){
+      --eq;             /* lower end-point */
+      if (eq<sq) 
+         fprintf(stderr,"StepAlpha: Alpha prune failed eq(%d) < sq(%d)",eq,sq);
+   }
+   while (eq<Q && hmm_seq[eq]->minimum_duration==0) eq++;
+   if (eq>qHi[t])  /* end point above beta beam so pull it back */
+      eq = qHi[t]; 
+      
+   
+   
+   /* Now compute current alpha column */
+   tmp = this->alphat1; this->alphat1 = this->alphat; this->alphat = tmp;
+   alphat  = this->alphat;
+   alphat1 = this->alphat1;
+
+   if (sq>0) ZeroAlpha(0,sq-1);
+
+   Nq = (sq == 0) ? 0:hmm_seq[sq-1]->states-1;
+
+   for (q = sq; q <= eq; q++) {
+      lNq = Nq; hmm = hmm_seq[q]; Nq = hmm->states-1; 
+      aq = alphat[q]; 
+      laq = alphat1[q];
+      if (q==0)
+         aq[0] = LZERO;
+      else{
+         aq[0] = alphat1[q-1][lNq];
+         if (q>sq && a1N>LSMALL) /* tee Model */
+            aq[0] = LAdd(aq[0],alphat[q-1][0]+a1N);
+      }
+      for (j=1;j<Nq;j++) {
+         a = hmm->transition[0][j];
+         x = (a>LSMALL)?a+aq[0]:LZERO;
+         for (i=1;i<Nq;i++){
+            a = hmm->transition[i][j]; y = laq[i];
+            if (a>LSMALL && y>LSMALL)
+               x = LAdd(x,y+a);
+         }
+         aq[j] = x + outprob[t][q][j-1];
+      }
+      x = LZERO;
+      for (i=2;i<Nq;i++){
+         a = hmm->transition[i][Nq]; y = aq[i];
+         if (a>LSMALL && y>LSMALL)
+            x = LAdd(x,y+a);
+      }
+      aq[Nq] = x; a1N = hmm->transition[0][Nq];
+   }
+   if (eq<Q) ZeroAlpha(eq+1,Q);
+
+   
+   if (t==T){
+      if (fabs((x-pr)/T) > 0.001)
+         fprintf(stderr,"StepAlpha: Forward/Backward Disagree %f/%f",x,pr);
+      
+   }
+
+   *start=sq; *end=eq;
+}
+
+
+void FinalReEstimate::ZeroAlpha(int qlo, int qhi)
+{
+	HMM * hmm;
+   int Nq,j,q;
+   double *aq;
+   
+   for (q=qlo;q<=qhi;q++) {   
+	   hmm = hmm_seq[q]; 
+      Nq = hmm->states-1; 
+      aq = alphat[q];
+      for (j=0;j<=Nq;j++)
+         aq[j] = LZERO;
    }
 }
