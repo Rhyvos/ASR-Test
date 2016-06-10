@@ -18,6 +18,7 @@
 #include "Audio.h"
 #include "hmm.h"
 #include "FinalReEstimate.h"
+#include "Recognizer.h"
 //#define _CRT_SECURE_NO_DEPRECATE
 #pragma warning (disable : 4996)
 using namespace std;
@@ -36,6 +37,7 @@ int main()
 
 	HMM *hmm = new HMM(36,5,"S");
 	FinalReEstimate *fre = new FinalReEstimate();
+	Recognizer *rec = new Recognizer();
 	hmm->Initialise(pm,10);
 	hmm->minVar = 0.05;
 	hmm->ReEstimate(pm,10);
@@ -46,9 +48,8 @@ int main()
 	fre->UpdateModels();
 	fre->ForwardBackward(pm);
 	fre->UpdateModels();
-	//hmm->ReEstimate(pm1,1,"");
-	//hmm->ReEstimate(pm1,1,"");
-	//hmm->ReEstimate(pm1,1,"");
+	rec->AddHmm(hmm);
+	rec->DoRecognition(pm1);
 	for (int i = 0; i < hmm->states-2; i++)
 	{
 		printf("\nState %d:\n",hmm->state[i].state_nr);
@@ -186,7 +187,7 @@ int main()
 	*/
 	
 	//getchar();
-	_CrtDumpMemoryLeaks();
+	//_CrtDumpMemoryLeaks();
 	return 0;
 }
 

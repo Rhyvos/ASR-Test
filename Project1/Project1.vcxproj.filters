@@ -33,6 +33,9 @@
     <ClInclude Include="FinalReEstimate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Recognizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MFCC.cpp">
@@ -53,5 +56,12 @@
     <ClCompile Include="FinalReEstimate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Recognizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
 </Project>

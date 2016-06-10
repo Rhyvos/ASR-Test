@@ -71,6 +71,7 @@
     <ClInclude Include="FinalReEstimate.h" />
     <ClInclude Include="HMM.h" />
     <ClInclude Include="MFCC.h" />
+    <ClInclude Include="Recognizer.h" />
     <ClInclude Include="Structs.h" />
   </ItemGroup>
   <ItemGroup>
@@ -79,7 +80,12 @@
     <ClCompile Include="FinalReEstimate.cpp" />
     <ClCompile Include="HMM.cpp" />
     <ClCompile Include="MFCC.cpp" />
+    <ClCompile Include="Recognizer.cpp" />
     <ClCompile Include="Source.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ClassDiagram.cd" />
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

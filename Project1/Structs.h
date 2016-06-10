@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <vector>
 struct Wav												
 	{
 		char ChunkID[4];				// "RIFF"				
@@ -92,6 +93,38 @@ struct State
 
 	int state_nr;
 	float g_const;
+};
+struct Node;
+struct Path;
+struct Token;
+struct TokenSet;
+struct Path
+{
+	Path * prev;
+	double * like;
+	int frame;
+	Node * node; 
+};
+
+extern class HMM;
+struct Node
+{
+	HMM * hmm;
+	TokenSet * states;
+	TokenSet * exit;
+	short ** seIndexes;
+	float max;
+};
+
+struct Token
+{
+	double like;
+	Path *path;
+};
+
+struct TokenSet
+{
+	Token tok;
 };
 
 

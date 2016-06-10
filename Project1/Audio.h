@@ -16,5 +16,6 @@ public:
 	ParamAudio * ParamAudioFile(const char * audio_src, const char * label_src);
 	
 	std::vector<Label*> ExtractLabels(const char * label_src);
+//	void LoadHmm(HMM * hmm, std::string hmm_src);
 };
 
