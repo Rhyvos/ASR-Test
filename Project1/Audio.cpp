@@ -12,6 +12,7 @@
 #include "MFCC.h"
 #include <vector>
 #include <stdlib.h> 
+#include <algorithm>
 #pragma warning (disable : 4996)
 #define BitsPerByte 8
 #define Second 10000000						// 1s = 1000000000ns but we have time variable in 100ns units
@@ -229,7 +230,7 @@ std::vector<Label*> Audio::ExtractLabels(const char * label_src)
 
 	std::ifstream input(label_src);
 	std::vector<std::string> split_buffer;
-	
+	float tmp;
 	int start,end;
 	int index=0;
 	char buffer[256];
@@ -244,8 +245,10 @@ std::vector<Label*> Audio::ExtractLabels(const char * label_src)
 			}
 			else
 			{
-				start = atoi(split_buffer[0].c_str());
-				end = atoi(split_buffer[1].c_str());
+				std::replace( split_buffer[0].begin(), split_buffer[0].end(), ',', '.');
+				std::replace( split_buffer[1].begin(), split_buffer[1].end(), ',', '.');
+				start = atof(split_buffer[0].c_str()) * 10000000.0;
+				end = atof(split_buffer[1].c_str()) * 10000000.0;
 				if(start>=end)
 				{
 					fprintf(stderr,"Label file:%s Corrupted at line %d: %s (start time higher then end time)\n",label_src,index+1,buffer);

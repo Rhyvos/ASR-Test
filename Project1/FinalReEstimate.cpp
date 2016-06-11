@@ -53,10 +53,11 @@ void FinalReEstimate::ListHmms(ParamAudio * pa)
 {
 	hmm_seq = new HMM*[pa->segments];
 	seq_num = pa->segments;
+	int j;
 	for (int i = 0; i < pa->segments; i++)
 	{
 		
-		for (int j = 0; j < hmms.size(); j++)
+		for (j = 0; j < hmms.size(); j++)
 		{
 			
 			if(hmms[j]->name.compare(pa->os[i].l->name)==0)
@@ -64,8 +65,11 @@ void FinalReEstimate::ListHmms(ParamAudio * pa)
 				hmm_seq[i]=hmms[j];
 				break;
 			}
-			fprintf(stderr,"Can't find hmm:%s",pa->os[i].l->name);
+			
+			
 		}
+		if(j == hmms.size())
+			fprintf(stderr,"Can't find hmm:%s\n",std::string(pa->os[i].l->name).c_str());
 	}
 }
 
@@ -454,8 +458,8 @@ void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, dou
 
    while (pr-MaxModelProb(sq,t-1,sq)>minFrwdP){
       ++sq;                /* raise start point */
-      if (sq>=qHi[t]) 
-         fprintf(stderr,"StepAlpha: Alpha prune failed sq(%d) > qHi(%d)\n",sq,qHi[t]);
+      //if (sq>=qHi[t]) 
+         //fprintf(stderr,"StepAlpha: Alpha prune failed sq(%d) > qHi(%d)\n",sq,qHi[t]);
    }
    if (sq<qLo[t])       /* start-point below beta beam so pull it back */
       sq = qLo[t];
@@ -466,8 +470,8 @@ void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, dou
    /*       + 1 for each tee model following eq.  */
    while (pr-MaxModelProb(eq,t-1,sq)>minFrwdP){
       --eq;             /* lower end-point */
-      if (eq<sq) 
-         fprintf(stderr,"StepAlpha: Alpha prune failed eq(%d) < sq(%d)\n",eq,sq);
+      //if (eq<sq) 
+         //fprintf(stderr,"StepAlpha: Alpha prune failed eq(%d) < sq(%d)\n",eq,sq);
    }
    while (eq<Q && hmm_seq[eq]->minimum_duration==0) eq++;
    if (eq>qHi[t])  /* end point above beta beam so pull it back */

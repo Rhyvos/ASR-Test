@@ -101,7 +101,7 @@ struct TokenSet;
 struct Path
 {
 	Path * prev;
-	double * like;
+	double like;
 	int frame;
 	Node * node; 
 };
