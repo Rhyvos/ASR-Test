@@ -65,6 +65,7 @@ int main()
 	Audio audio;
 	ParamAudio *pm=audio.ParamAudioFile("train1.wav","train1.lab");
 	ParamAudio *pm1=audio.ParamAudioFile("train1.wav",NULL);
+	ParamAudio *pm2=audio.ParamAudioFile("test1.wav",NULL);
 
 	HMM *hmm_s = new HMM(36,5,"sil");
 	HMM *hmm_a = new HMM(36,5,"A");
@@ -103,7 +104,8 @@ int main()
 	rec->AddHmm(hmm_s);
 	rec->AddHmm(hmm_a);
 	rec->AddHmm(hmm_b);
-	rec->DoRecognition(pm1);
+	rec->DoRecognition(pm2);
+
 	hmm_s->SaveHmm("S");
 	hmm_a->SaveHmm("A");
 	hmm_b->SaveHmm("B");

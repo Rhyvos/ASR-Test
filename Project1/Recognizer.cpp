@@ -94,7 +94,18 @@ void Recognizer::DoRecognition(ParamAudio * pa)
 	}
 
 	if(wordMaxTok.path != NULL)
+	{
 		ReadPath(wordMaxTok.path);
+		float start, end;
+		start = (wordMaxTok.path->prev==NULL)?0:wordMaxTok.path->prev->frame;
+		end = pa->os[0].frames;
+		start++;
+		end++;
+		start = (start * 160.0 * 226.0) / 10000000.0;
+		end = (end * 160.0 * 226.0) / 10000000.0;
+		printf("%f %f %s \n",start,end,std::string(wordMaxNode->hmm->name).c_str());
+	}
+	
 
 }
 
@@ -244,6 +255,8 @@ void Recognizer::ReadPath(Path *  path)
 	float start, end;
 	start = (path->prev==NULL)?0:path->prev->frame;
 	end = path->frame;
+	start++;
+	end++;
 	start = (start * 160.0 * 226.0) / 10000000.0;
 	end = (end * 160.0 * 226.0) / 10000000.0;
 	printf("%f %f %s \n",start,end,std::string(path->node->hmm->name).c_str());
