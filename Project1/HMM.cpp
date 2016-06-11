@@ -10,9 +10,9 @@
 #include "HMM.h"
 #include <cmath>
 #include <algorithm> 
-
-
-
+#include <fstream>
+#include <iomanip>
+#include <sstream>
 HMM::HMM(void)
 {
 
@@ -867,4 +867,66 @@ void HMM::FindSO(int * so, int * d, int s)
             FindSO(so,d,p);
    }
    so[s]=++(*d)-1; 
+}
+
+
+std::string FormatFloat(float f)
+{
+	int e=0;
+	bool m = (f<1&&f>-1)?false:true;
+	if(f!= 0.0)
+		while((f<1 || f>= 10) && (f>-1 || f<=-10))
+		{
+			if(f<1 && f>-1)
+				f*=10;
+			if(f>=10 || f<=-10)
+				f/=10;
+
+			e++;
+		}
+	if(e == 0)
+		m=true;
+	
+	std::stringstream stream;
+	stream << std::fixed << std::setprecision(6) << f <<"e"<<(m?"+":"-")<< std::setfill('0') << std::setw(3) << e;
+
+
+	return stream.str();
+
+}
+
+void HMM::SaveHmm(std::string out_dir)
+{
+	std::ofstream output(out_dir,std::ofstream::out);
+	
+	for (int i = 0; i < states-2; i++)
+	{
+		output<<"\n<STATE> "<<state[i].state_nr+1<<std::endl;
+		output<<"<MEAN> "<<vector_size<<std::endl;
+		for (int j = 0; j < vector_size; j++)
+		{
+			output<<FormatFloat(state[i].mean[j])<<" ";
+
+		}
+		output<<"\n<VARIANCE> "<<vector_size<<std::endl;
+		for (int j = 0; j < vector_size; j++)
+		{
+			output<<FormatFloat(state[i].var[j])<<" ";
+
+		}
+		output<<"\n<GCONST> "<<FormatFloat(state[i].g_const);
+
+	}
+	output<<"\n<TRANSP> "<<states<<std::endl;
+	for (int i = 0; i <states; i++)
+	{
+		for (int j = 0; j < states; j++)
+		{
+			output<<FormatFloat(exp(transition[i][j]))<<" ";
+		}
+		output<<"\n";
+	}
+
+	output.close();
+
 }

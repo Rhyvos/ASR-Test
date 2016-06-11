@@ -49,5 +49,6 @@ public:
 	void UpdateRestCount(float ** prob,ObservationSegment * os,double pr);
 	void SetMinDuration(void);
 	void FindSO(int * so, int * d, int s);
+	void SaveHmm(std::string out_dir);
 };
 

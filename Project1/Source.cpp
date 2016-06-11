@@ -23,59 +23,9 @@
 #pragma warning (disable : 4996)
 using namespace std;
 
-		
-
-int main()
+void printfhmm(HMM *hmm)
 {
-	
-	
-	
-
-	Audio audio;
-	ParamAudio *pm=audio.ParamAudioFile("train1.wav","train1.lab");
-	ParamAudio *pm1=audio.ParamAudioFile("train1.wav",NULL);
-
-	HMM *hmm_s = new HMM(36,5,"sil");
-	HMM *hmm_a = new HMM(36,5,"A");
-	HMM *hmm_b = new HMM(36,5,"B");
-	FinalReEstimate *fre = new FinalReEstimate();
-	Recognizer *rec = new Recognizer();
-
-
-	hmm_s->Initialise(pm,10);
-	hmm_s->minVar = 0.05;
-	hmm_s->ReEstimate(pm,10);
-
-	hmm_a->Initialise(pm,10);
-	hmm_a->minVar = 0.05;
-	hmm_a->ReEstimate(pm,10);
-
-	hmm_b->Initialise(pm,10);
-	hmm_b->minVar = 0.05;
-	hmm_b->ReEstimate(pm,10);
-
-	fre->AddHmm(hmm_s);
-	fre->AddHmm(hmm_a);
-	fre->AddHmm(hmm_b);
-	fre->ForwardBackward(pm);
-	fre->UpdateModels();
-	fre->ForwardBackward(pm);
-	fre->UpdateModels();
-	fre->ForwardBackward(pm);
-	fre->UpdateModels();
-
-
-	rec->AddHmm(hmm_s);
-	rec->AddHmm(hmm_a);
-	rec->AddHmm(hmm_b);
-	rec->DoRecognition(pm1);
-	delete pm;
-	delete pm1;
-	delete hmm_s;
-	delete hmm_a;
-	delete hmm_b;
-	delete fre;
-	/*for (int i = 0; i < hmm->states-2; i++)
+	for (int i = 0; i < hmm->states-2; i++)
 	{
 		printf("\nState %d:\n",hmm->state[i].state_nr);
 		printf("Mean\n");
@@ -102,8 +52,70 @@ int main()
 		}
 		printf("\n");
 	}
+}
+
+
+
+int main()
+{
 	
 	
+	
+
+	Audio audio;
+	ParamAudio *pm=audio.ParamAudioFile("train1.wav","train1.lab");
+	ParamAudio *pm1=audio.ParamAudioFile("train1.wav",NULL);
+
+	HMM *hmm_s = new HMM(36,5,"sil");
+	HMM *hmm_a = new HMM(36,5,"A");
+	HMM *hmm_b = new HMM(36,5,"B");
+	FinalReEstimate *fre = new FinalReEstimate();
+	Recognizer *rec = new Recognizer();
+
+
+	hmm_s->Initialise(pm,10);
+	hmm_s->minVar = 0.05;
+	hmm_s->ReEstimate(pm,10);
+	
+	hmm_a->Initialise(pm,10);
+	hmm_a->minVar = 0.05;
+	hmm_a->ReEstimate(pm,10);
+
+	hmm_b->Initialise(pm,10);
+	hmm_b->minVar = 0.05;
+	hmm_b->ReEstimate(pm,10);
+
+	fre->AddHmm(hmm_s);
+	fre->AddHmm(hmm_a);
+	fre->AddHmm(hmm_b);
+	fre->ForwardBackward(pm);
+	fre->UpdateModels();
+	fre->ForwardBackward(pm);
+	fre->UpdateModels();
+	fre->ForwardBackward(pm);
+	fre->UpdateModels();
+
+	printfhmm(hmm_s);
+	printfhmm(hmm_a);
+	printfhmm(hmm_b);
+
+
+	rec->AddHmm(hmm_s);
+	rec->AddHmm(hmm_a);
+	rec->AddHmm(hmm_b);
+	rec->DoRecognition(pm1);
+	hmm_s->SaveHmm("S");
+	hmm_a->SaveHmm("A");
+	hmm_b->SaveHmm("B");
+	delete pm;
+	delete pm1;
+	delete hmm_s;
+	delete hmm_a;
+	delete hmm_b;
+	delete fre;
+	
+	
+	/*
 	for(int i=0; i<300; i++)
 			{
 				printf("buffer_array[%d] = buffer_array[%d];\n",i,400 - 300 + i);

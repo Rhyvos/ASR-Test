@@ -93,7 +93,8 @@ void Recognizer::DoRecognition(ParamAudio * pa)
 		//tokenpropagation(bestwordtoken)
 	}
 
-
+	if(wordMaxTok.path != NULL)
+		ReadPath(wordMaxTok.path);
 
 }
 
@@ -109,12 +110,14 @@ void Recognizer::ProccesObservation(ObservationSegment * os, int t)
 	}
 	genThresh=genMaxTok.like-genBeam;
 	if (genThresh<LSMALL) genThresh=LSMALL;
-
+	
+	if(wordMaxNode !=NULL && wordMaxNode->hmm->name != "sil")
+		printf("");
 	if(wordMaxTok.like>genThresh)
 	{
 		for (int i = 0; i < hmm_nodes.size(); i++)
 		{
-			TokenPropagation(hmm_nodes[i],&wordMaxTok,t);
+			TokenPropagation(hmm_nodes[i],&wordMaxTok,wordMaxNode,t);
 		}
 	}
 
@@ -205,7 +208,7 @@ void Recognizer::StepNode(ObservationSegment * os, int t, Node * node)
      
    }
    if (res->tok.like>LSMALL){
-      tok.like=res->tok.like;
+      tok=res->tok;
       if (tok.like > wordMaxTok.like) {
          wordMaxTok=tok;
          wordMaxNode=node;
@@ -219,14 +222,29 @@ void Recognizer::StepNode(ObservationSegment * os, int t, Node * node)
 }
 
 
-void Recognizer::TokenPropagation(Node * node, Token * tok, int frame)
+void Recognizer::TokenPropagation(Node * node, Token * tok,Node * prevn, int frame)
 {
 	Path * tmp;
 	tmp = new Path();
 	tmp->frame = frame;
 	tmp->like = tok->like + wordpen;
 	tmp->prev = tok->path;
+	tmp->node = prevn;
 	node->states[0].tok = *tok;
 	node->states[0].tok.like += wordpen;
 	node->states[0].tok.path = tmp;
+}
+
+
+void Recognizer::ReadPath(Path *  path)
+{
+	if(path->prev != NULL)
+		ReadPath(path->prev);
+	
+	float start, end;
+	start = (path->prev==NULL)?0:path->prev->frame;
+	end = path->frame;
+	start = (start * 160.0 * 226.0) / 10000000.0;
+	end = (end * 160.0 * 226.0) / 10000000.0;
+	printf("%f %f %s \n",start,end,std::string(path->node->hmm->name).c_str());
 }

@@ -22,6 +22,7 @@ public:
 	void DoRecognition(ParamAudio * pa);
 	void ProccesObservation(ObservationSegment * os, int t);
 	void StepNode(ObservationSegment * os, int t, Node * node);
-	void TokenPropagation(Node * node, Token * tok, int frame);
+	void TokenPropagation(Node * node, Token * tok,Node * prevn, int frame);
+	void ReadPath(Path *  path);
 };
 
