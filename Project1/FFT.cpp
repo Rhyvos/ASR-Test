@@ -146,7 +146,8 @@ void FFT::Transform(int num_samples, bool inverse, float *real_in, float *imag_i
     **   Do simultaneous data copy and bit-reversal ordering into outputs...
     */
 
-   for (i = 0; i < num_samples; i++) {
+   for (i = 0; i < num_samples; i++) 
+   {
       j = Fast_Reverse_Bits(i, NumBits);
 	  //printf("[%d]<->[%d]\n",i,j);
       real_out[j] = real_in[i];
@@ -195,11 +196,7 @@ void FFT::Transform(int num_samples, bool inverse, float *real_in, float *imag_i
 
             real_out[j] += tr;
             imag_out[j] += ti;
-
-			
          }
-		 
-
       }
 
       BlockEnd = BlockSize;

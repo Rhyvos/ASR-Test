@@ -502,7 +502,6 @@ void HMM::UpdateMean(void)
 			state[i].old_mean[j] = state[i].mean[j];
 			state[i].mean[j] = x;
 		}
-
 	}
 }
 

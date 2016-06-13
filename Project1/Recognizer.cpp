@@ -1,3 +1,11 @@
+#ifdef _DEBUG
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
+#define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#define new DEBUG_NEW
+#endif
+
 #include "Recognizer.h"
 #include <fstream>
 
@@ -6,7 +14,7 @@ Recognizer::Recognizer(void)
 	null_token.like=LZERO;
 	null_token.path=NULL;
 	genThresh = LSMALL;
-	wordpen = 0;
+	wordpen = 0.0;
 	genBeam = 300;
 }
 

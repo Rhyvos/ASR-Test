@@ -104,7 +104,7 @@ int main()
 	rec->AddHmm(hmm_s);
 	rec->AddHmm(hmm_a);
 	rec->AddHmm(hmm_b);
-	rec->DoRecognition(pm2);
+	rec->DoRecognition(pm1);
 
 	hmm_s->SaveHmm("S");
 	hmm_a->SaveHmm("A");
@@ -223,7 +223,7 @@ int main()
 	*/
 	
 	//getchar();
-	//_CrtDumpMemoryLeaks();
+	_CrtDumpMemoryLeaks();
 	return 0;
 }
 

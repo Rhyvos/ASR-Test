@@ -199,8 +199,6 @@ void MFCC::DCT(int num_samples, bool inverse, float * input, float * output)
    mfnorm = sqrt(2.0/(float)num_samples);
    pi_factor = M_PI/(float)num_samples;
 
- 
-
    for (j=0; j<num_samples; j++)  {
 	   output[j] = 0.0; x = (float)(j + 1)* pi_factor;
       for (k=0; k<num_samples; k++)
