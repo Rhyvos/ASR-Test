@@ -1,9 +1,10 @@
 #pragma once
 #include "FFT.h"
+#include "Config.h"
 class MFCC
 {
 public:
-	MFCC(int window_lenght = 512, float low_freq = 0, float high_freq = 8000, int sample_rate = 16000);
+	MFCC(int window_lenght = 512, float low_freq = 0, float high_freq = 8000, int sample_rate = 16000, Config *cf = nullptr);
 	~MFCC(void);
 	void Compute(int num_samples, int num_cep, float * input, float * output);
 	void Preemphasis(int num_samples, float a_param, float * input);
@@ -29,5 +30,5 @@ private:
 public:
 	void WeightCepstrum(float * input , int n);
 	void GenCepLift(int CepLift, int n);
-//	void SetMinDuration(void);
+
 };

@@ -1,6 +1,6 @@
 #pragma once
 #include "Structs.h"
-
+#include "Config.h"
 #define LZERO  (-1.0E10)   /* ~log(0) */
 #define LSMALL (-0.5E10)   /* log values < LSMALL are set to LZERO */
 #define MINEARG (-708.3)   /* lowest exp() arg  = log(MINLARG) */
@@ -27,7 +27,7 @@ public:
 	int minimum_duration;
 public:
 	HMM(std::string hmm_src);
-	HMM(int vector_size, int states, std::string l_name);
+	HMM(int vector_size, Config * cf, std::string l_name);
 	void Initialise(ParamAudio * pa, int iteration);
 	void GetMean(ParamAudio * pa);
 	void GetVariance(ParamAudio * pa);

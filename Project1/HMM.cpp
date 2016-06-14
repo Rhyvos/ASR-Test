@@ -45,8 +45,24 @@ HMM::HMM(std::string hmm_src) //load from file
 }
 
 
-HMM::HMM(int vector_size, int states, std::string l_name): vector_size(vector_size), states(states), name(l_name)
+HMM::HMM(int vector_size, Config * cf, std::string l_name): vector_size(vector_size), name(l_name)
 {
+	minVar  = 1.0E-2;
+	epsilon = 1.0E-4;
+	states	= 5;
+	minLogExp = -log(-LZERO);
+
+	if (cf != nullptr)
+	{
+			if(cf->Exist("MINVAR"))
+				minVar = cf->GetConfig("MINVAR");
+
+			if(cf->Exist("EPSILON"))
+				epsilon = cf->GetConfig("EPSILON");
+
+			if(cf->Exist("STATES"))
+				states = cf->GetConfig("STATES");
+	}
 
 	if(states<3 || vector_size<1)
 	{
@@ -55,9 +71,7 @@ HMM::HMM(int vector_size, int states, std::string l_name): vector_size(vector_si
 	}
 	
 	state = new State[states-2];				// we don't need first and last state mean and variance
-	minVar  = 1.0E-2;
-	epsilon = 1.0E-4;
-	minLogExp = -log(-LZERO);
+
 	minimum_duration =-1;
 	for(int i=0 ;i<states-2;i++)
 	{

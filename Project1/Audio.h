@@ -1,11 +1,13 @@
 #pragma once
 #include "Structs.h"
 #include <vector>
+#include "Config.h"
 class Audio
 {
 public:
-	Audio(void);
+	Audio(Config * cf = nullptr);
 	~Audio(void);
+	Config * cf;
 	int frame_size;
 	int frame_overlap;
 	int low_freq;
@@ -17,5 +19,6 @@ public:
 	
 	std::vector<Label*> ExtractLabels(const char * label_src);
 //	void LoadHmm(HMM * hmm, std::string hmm_src);
+	
 };
 

@@ -17,6 +17,7 @@ public:
 	float genBeam;
 	Token *tBuf;             /* Buffer Array[2..N-1] of tok for StepHMM1 */
 	TokenSet *sBuf;
+	std::vector<Path *> paths;
 	void AddHmm(HMM * hmm);
 	void LoadHmm(std::string hmm_src);
 	void DoRecognition(ParamAudio * pa);
@@ -24,5 +25,6 @@ public:
 	void StepNode(ObservationSegment * os, int t, Node * node);
 	void TokenPropagation(Node * node, Token * tok,Node * prevn, int frame);
 	void ReadPath(Path *  path);
+	void FreeMemory(void);
 };
 

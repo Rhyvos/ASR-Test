@@ -23,11 +23,23 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 #endif // TEST
 
 
-MFCC::MFCC(int window_lenght, float low_freq, float high_freq, int sample_rate): window_lenght(window_lenght)
+MFCC::MFCC(int window_lenght, float low_freq, float high_freq, int sample_rate,Config * cf): window_lenght(window_lenght)
 {
 	preemphasis_param = 0.97;
 	CepLifter = 22;
 	Filters_Number = 24;
+
+	if (cf != nullptr)
+	{
+		if(cf->Exist("PREEMPHASIS"))
+			preemphasis_param = cf->GetConfig("PREEMPHASIS");
+
+		if(cf->Exist("CEPLIFTER"))
+			CepLifter = cf->GetConfig("CEPLIFTER");
+
+		if(cf->Exist("FILTERNUMBER"))
+			Filters_Number = cf->GetConfig("FILTERNUMBER"); 
+	}
 
 	float tmp_low = hz_to_mel(low_freq);
 	float tmp_high = hz_to_mel(high_freq);
@@ -403,5 +415,7 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 	delete[] cf;
 }  
 #endif // TEST
+
+
 
 

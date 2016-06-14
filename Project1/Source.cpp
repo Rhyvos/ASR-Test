@@ -19,6 +19,7 @@
 #include "hmm.h"
 #include "FinalReEstimate.h"
 #include "Recognizer.h"
+#include "Config.h"
 //#define _CRT_SECURE_NO_DEPRECATE
 #pragma warning (disable : 4996)
 using namespace std;
@@ -59,32 +60,41 @@ void printfhmm(HMM *hmm)
 int main()
 {
 	
-	
-	
-
-	Audio audio;
+	Config *cf = new Config("conf.ini");
+	cf->Exist("STATES");
+	int states, iterations;
+	Audio audio(cf);
 	ParamAudio *pm=audio.ParamAudioFile("train1.wav","train1.lab");
 	ParamAudio *pm1=audio.ParamAudioFile("train1.wav",NULL);
 	ParamAudio *pm2=audio.ParamAudioFile("test1.wav",NULL);
 
-	HMM *hmm_s = new HMM(36,5,"sil");
-	HMM *hmm_a = new HMM(36,5,"A");
-	HMM *hmm_b = new HMM(36,5,"B");
+	if(cf->Exist("STATES"))
+		states = cf->GetConfig("STATES");
+	else
+		states=5;
+
+	if(cf->Exist("ITERATIONS"))
+		iterations = cf->GetConfig("ITERATIONS");
+	else
+		iterations=10;
+
+
+	HMM *hmm_s = new HMM(36,cf,"sil");
+	HMM *hmm_a = new HMM(36,cf,"A");
+	HMM *hmm_b = new HMM(36,cf,"B"); 
 	FinalReEstimate *fre = new FinalReEstimate();
 	Recognizer *rec = new Recognizer();
 
 
-	hmm_s->Initialise(pm,10);
-	hmm_s->minVar = 0.05;
-	hmm_s->ReEstimate(pm,10);
-	
-	hmm_a->Initialise(pm,10);
-	hmm_a->minVar = 0.05;
-	hmm_a->ReEstimate(pm,10);
 
-	hmm_b->Initialise(pm,10);
-	hmm_b->minVar = 0.05;
-	hmm_b->ReEstimate(pm,10);
+	hmm_s->Initialise(pm,iterations);
+	hmm_s->ReEstimate(pm,iterations);
+	
+	hmm_a->Initialise(pm,iterations);
+	hmm_a->ReEstimate(pm,iterations);
+
+	hmm_b->Initialise(pm,iterations);
+	hmm_b->ReEstimate(pm,iterations);
 
 	fre->AddHmm(hmm_s);
 	fre->AddHmm(hmm_a);
@@ -111,12 +121,14 @@ int main()
 	hmm_b->SaveHmm("B");
 	delete pm;
 	delete pm1;
+	delete pm2;
+
+	delete fre;
+	delete rec;
 	delete hmm_s;
 	delete hmm_a;
 	delete hmm_b;
-	delete fre;
-	
-	
+	delete cf;
 	/*
 	for(int i=0; i<300; i++)
 			{

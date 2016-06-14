@@ -1,70 +1,11 @@
-﻿Build started 2016-06-13 02:23:13.
+﻿Build started 2016-06-14 18:47:21.
      1>Project "C:\Users\Bartek\Source\Repos\ASR-Test2\Project1\Project1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt FFT.cpp HMM.cpp MFCC.cpp Source.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W0 /WX- /sdl- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt Source.cpp
          Source.cpp
-     1>c:\users\bartek\source\repos\asr-test2\project1\structs.h(109): warning C4091: 'extern ' : ignored on left of 'HMM' when no variable is declared
-     1>c:\users\bartek\source\repos\asr-test2\project1\source.cpp(78): warning C4305: '=' : truncation from 'double' to 'float'
-     1>c:\users\bartek\source\repos\asr-test2\project1\source.cpp(82): warning C4305: '=' : truncation from 'double' to 'float'
-     1>c:\users\bartek\source\repos\asr-test2\project1\source.cpp(86): warning C4305: '=' : truncation from 'double' to 'float'
-         MFCC.cpp
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(28): warning C4305: '=' : truncation from 'double' to 'float'
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(199): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(200): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(205): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(197): warning C4101: 'numChan' : unreferenced local variable
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(227): warning C4244: '*=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(262): warning C4101: 'j' : unreferenced local variable
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(279): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(280): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\mfcc.cpp(282): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-         HMM.cpp
-     1>c:\users\bartek\source\repos\asr-test2\project1\structs.h(109): warning C4091: 'extern ' : ignored on left of 'HMM' when no variable is declared
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(58): warning C4305: '=' : truncation from 'double' to 'float'
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(59): warning C4305: '=' : truncation from 'double' to 'float'
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(87): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(88): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(91): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(258): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(278): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(281): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(323): warning C4244: 'return' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(369): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(375): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(399): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(403): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(541): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(586): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(754): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(768): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(780): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(788): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(798): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(802): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(803): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(806): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(807): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(810): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\hmm.cpp(811): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-         FFT.cpp
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(62): warning C4244: '*=' : conversion from 'const double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(73): warning C4244: '*=' : conversion from 'const double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(154): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(194): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(195): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(197): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(198): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(224): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(240): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(241): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(242): warning C4244: 'initializing' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(253): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(254): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(255): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\bartek\source\repos\asr-test2\project1\fft.cpp(256): warning C4244: '=' : conversion from 'double' to 'float', possible loss of data
-         Generating Code...
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Bartek\Source\Repos\ASR-Test2\Debug\MFCC.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Bartek\Source\Repos\ASR-Test2\Debug\MFCC.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Bartek\Source\Repos\ASR-Test2\Debug\MFCC.lib" /MACHINE:X86 Debug\Audio.obj
+         Debug\Config.obj
          Debug\FFT.obj
          Debug\FinalReEstimate.obj
          Debug\HMM.obj
@@ -76,4 +17,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.79
+Time Elapsed 00:00:01.15

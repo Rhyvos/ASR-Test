@@ -21,6 +21,16 @@ Recognizer::Recognizer(void)
 
 Recognizer::~Recognizer(void)
 {
+	for (int i = 0; i < hmm_nodes.size(); i++)
+	{
+		for (int j = 0; j < hmm_nodes[i]->hmm->states-1; j++)
+		{
+			delete[] hmm_nodes[i]->seIndexes[j];
+		}
+		delete[] hmm_nodes[i]->seIndexes;
+		delete[] hmm_nodes[i]->states;
+		delete hmm_nodes[i];
+	}
 }
 
 
@@ -114,6 +124,15 @@ void Recognizer::DoRecognition(ParamAudio * pa)
 		printf("%f %f %s \n",start,end,std::string(wordMaxNode->hmm->name).c_str());
 	}
 	
+	FreeMemory();
+
+	for (int i = 0; i < hmm_nodes.size(); i++)
+	{
+		delete hmm_nodes[i]->exit;
+
+	}
+
+	delete[] sBuf;
 
 }
 
@@ -130,8 +149,7 @@ void Recognizer::ProccesObservation(ObservationSegment * os, int t)
 	genThresh=genMaxTok.like-genBeam;
 	if (genThresh<LSMALL) genThresh=LSMALL;
 	
-	if(wordMaxNode !=NULL && wordMaxNode->hmm->name != "sil")
-		printf("");
+
 	if(wordMaxTok.like>genThresh)
 	{
 		for (int i = 0; i < hmm_nodes.size(); i++)
@@ -158,32 +176,23 @@ void Recognizer::StepNode(ObservationSegment * os, int t, Node * node)
    hmm=node->hmm; 
    N=hmm->states-1;
    trP=hmm->transition;
-   for (j=1,res=sBuf+1;j<N;j++,res++) {  /* Emitting states first */
+   for (j=1,res=sBuf+1;j<N;j++,res++) 
+   { 
 	  i=node->seIndexes[j-1][0]; 
       endi=node->seIndexes[j-1][1];
       cur=node->states+i;
-
       res->tok=cur->tok; 
-	  //printf("res=cur =  %f\n",res->tok.like);
-
       res->tok.like+=trP[i][j];
-
-      for (i++,cur++;i<=endi;i++,cur++) {
-		 //printf("cur++\n");
+      for (i++,cur++;i<=endi;i++,cur++)
+	  {
          cmp.tok=cur->tok;
-		 //printf("trP[i][j] =  %f\n",exp(trP[i][j]));
          cmp.tok.like+=trP[i][j];
-         
          if (cmp.tok.like > res->tok.like)
                res->tok=cmp.tok;
-
       }
-      if (res->tok.like>genThresh) { /* State pruning */
+      if (res->tok.like>genThresh) { 
 		  outp=node->hmm->OutP(os,t,j);
-		 //printf("res.tok.like =  %f\n",res->tok.like);
          res->tok.like+=outp;
-		 //printf("state:%d\n",j);
-		 //printf("res.tok.like + outp =  %f\n",res->tok.like);
          if (res->tok.like>max.like)
             max=res->tok;
       } 
@@ -198,15 +207,13 @@ void Recognizer::StepNode(ObservationSegment * os, int t, Node * node)
    for (i=0,res=sBuf,cur=node->states; i<N;i++,res++,cur++) {
       cur->tok=res->tok; 
    }
-
-   /* Set up pruning limits */
    if (max.like>genMaxTok.like) {
       genMaxTok=max;
       genMaxNode=node;
    }
    node->max=max.like;
-   //printf("max.like=%f\n",max.like);
-   i=node->seIndexes[N-1][0]; /* Exit state (ignoring tee trP) */
+
+   i=node->seIndexes[N-1][0];
    endi=node->seIndexes[N-1][1];
    
    res=node->exit;
@@ -245,6 +252,7 @@ void Recognizer::TokenPropagation(Node * node, Token * tok,Node * prevn, int fra
 {
 	Path * tmp;
 	tmp = new Path();
+	paths.push_back(tmp);
 	tmp->frame = frame;
 	tmp->like = tok->like + wordpen;
 	tmp->prev = tok->path;
@@ -268,4 +276,13 @@ void Recognizer::ReadPath(Path *  path)
 	start = (start * 160.0 * 226.0) / 10000000.0;
 	end = (end * 160.0 * 226.0) / 10000000.0;
 	printf("%f %f %s \n",start,end,std::string(path->node->hmm->name).c_str());
+}
+
+
+void Recognizer::FreeMemory(void)
+{
+	for (int i = 0; i < paths.size(); i++)
+	{
+		delete paths[i];
+	}
 }

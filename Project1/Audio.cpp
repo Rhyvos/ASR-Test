@@ -16,8 +16,10 @@
 #pragma warning (disable : 4996)
 #define BitsPerByte 8
 #define Second 10000000						// 1s = 1000000000ns but we have time variable in 100ns units
-Audio::Audio(void)
+Audio::Audio(Config * cf)
 {
+	this->cf = cf;
+	
 	frame_size = 400;
 	frame_overlap = 240;
 	low_freq = 0;
@@ -26,6 +28,27 @@ Audio::Audio(void)
 	regression_window = 2;
 	fft_frame_size = 2;
 	while(fft_frame_size<frame_size) fft_frame_size<<=1;
+	
+	if (cf != nullptr)
+	{
+		if(cf->Exist("FRAMESIZE"))
+			frame_size = cf->GetConfig("FRAMESIZE");
+
+		if(cf->Exist("FRAMEOVERLAP"))
+			frame_overlap = cf->GetConfig("FRAMEOVERLAP");
+
+		if(cf->Exist("LOWFREQ"))
+			low_freq = cf->GetConfig("LOWFREQ");
+
+		if(cf->Exist("HIFREQ"))
+			high_freq = cf->GetConfig("HIFREQ");
+
+		if(cf->Exist("CEPNUMBER"))
+			cep_number = cf->GetConfig("CEPNUMBER");
+
+		if(cf->Exist("REGRESSIONWINDOW"))
+			regression_window = cf->GetConfig("REGRESSIONWINDOW"); 
+	}
 }
 
 
@@ -61,7 +84,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	}
 	high_freq = high_freq ? high_freq : (pm->audio_header.SampleRate/2);
 
-	MFCC *mfcc = new MFCC(fft_frame_size,low_freq,high_freq,pm->audio_header.SampleRate);
+	MFCC *mfcc = new MFCC(fft_frame_size,low_freq,high_freq,pm->audio_header.SampleRate, cf);
 
 	short buffer;
 	float *buffer_array = new float[frame_size];
@@ -260,6 +283,8 @@ std::vector<Label*> Audio::ExtractLabels(const char * label_src)
 		}
 	return output;
 }
+
+
 
 
 
