@@ -8,14 +8,26 @@
 
 #include "Recognizer.h"
 #include <fstream>
-
-Recognizer::Recognizer(void)
+#define Second 10000000		
+Recognizer::Recognizer(Config * cf)
 {
+	this->cf = cf;
 	null_token.like=LZERO;
 	null_token.path=NULL;
 	genThresh = LSMALL;
 	wordpen = 0.0;
 	genBeam = 300;
+	if (cf != nullptr)
+	{
+		if(cf->Exist("WORDPEN"))
+			wordpen = cf->GetConfig("WORDPEN");
+
+		if(cf->Exist("GENBEAM"))
+			genBeam = cf->GetConfig("GENBEAM");
+
+		if(cf->Exist("TRACE"))
+			trace = cf->GetConfig("TRACE"); 
+	}
 }
 
 
@@ -70,7 +82,7 @@ void Recognizer::AddHmm(HMM * hmm)
 
 void Recognizer::LoadHmm(std::string hmm_src)
 {
-	HMM * h = new HMM(hmm_src);
+	HMM * h = new HMM(hmm_src,cf);
 	AddHmm(h);
 }
 
@@ -80,11 +92,19 @@ void Recognizer::DoRecognition(ParamAudio * pa)
 {
 
 	//resettokens()
+	if(trace & TRACE::TOP)
+		printf("Begin recognition proccess for file: %s\n",std::string(pa->audio_src).c_str());
 	int max=0;
-	std::string tmp="";
+
 	for (int i = 0; i < hmm_nodes.size(); i++)
 	{
-		hmm_nodes[i]->states[0].tok.like = 0;
+		for (int j = 0; j < hmm_nodes[i]->hmm->states-1; j++)
+		{
+			hmm_nodes[i]->states[j].tok.like = LZERO;
+			hmm_nodes[i]->states[j].tok.path = NULL;
+
+		}
+		hmm_nodes[i]->states[0].tok.like = 0.0;
 		hmm_nodes[i]->exit = new TokenSet();
 		if(hmm_nodes[i]->hmm->states > max)
 			max = hmm_nodes[i]->hmm->states;
@@ -101,29 +121,25 @@ void Recognizer::DoRecognition(ParamAudio * pa)
 	{
 
 		ProccesObservation(pa->os,i);
-		if(tmp != std::string(genMaxNode->hmm->name))
-		{
-			tmp = std::string(genMaxNode->hmm->name);
-			printf("Observation @%d most like node %s\n",i,tmp.c_str());
-			
-		}
+
+		if(trace & TRACE::DEEP)
+			printf("Observation @%d most like node %s\n",i,genMaxNode->hmm->name.c_str());
+
 		
 		//tokenpropagation(bestwordtoken)
 	}
 
-	if(wordMaxTok.path != NULL)
+	if(wordMaxTok.path != NULL && ((trace & TRACE::TOP) || (trace & TRACE::DEEP)))
 	{
 		ReadPath(wordMaxTok.path);
 		float start, end;
 		start = (wordMaxTok.path->prev==NULL)?0:wordMaxTok.path->prev->frame;
 		end = pa->os[0].frames;
-		start++;
-		end++;
-		start = (start * 160.0 * 226.0) / 10000000.0;
-		end = (end * 160.0 * 226.0) / 10000000.0;
-		printf("%f %f %s \n",start,end,std::string(wordMaxNode->hmm->name).c_str());
+		transcript.push_back(Label(std::string(wordMaxNode->hmm->name).c_str(),start,end));
 	}
-	
+
+
+	SaveTranscript(pa);
 	FreeMemory();
 
 	for (int i = 0; i < hmm_nodes.size(); i++)
@@ -271,11 +287,10 @@ void Recognizer::ReadPath(Path *  path)
 	float start, end;
 	start = (path->prev==NULL)?0:path->prev->frame;
 	end = path->frame;
-	start++;
-	end++;
-	start = (start * 160.0 * 226.0) / 10000000.0;
-	end = (end * 160.0 * 226.0) / 10000000.0;
-	printf("%f %f %s \n",start,end,std::string(path->node->hmm->name).c_str());
+
+	//start = (start * 160.0 * 226.0) / 10000000.0;
+	//end = (end * 160.0 * 226.0) / 10000000.0;
+	transcript.push_back(Label(std::string(path->node->hmm->name).c_str(),start,end));
 }
 
 
@@ -285,4 +300,19 @@ void Recognizer::FreeMemory(void)
 	{
 		delete paths[i];
 	}
+
+	paths.clear();
+}
+
+
+void Recognizer::SaveTranscript(ParamAudio * pa)
+{
+	int a = pa->frame_size-pa->frame_overlap;
+	int sample_delta = Second/pa->audio_header.SampleRate;
+	std::ofstream output(std::string(pa->audio_src+".lab").c_str(),std::ofstream::out);
+	for (int i = 0; i < transcript.size(); i++)
+	{
+		output<<(transcript[i].start * a * sample_delta)/10000000.0<<" "<<(transcript[i].end * a * sample_delta)/10000000.0<<" "<<transcript[i].name<<std::endl;
+	}
+	transcript.clear();
 }

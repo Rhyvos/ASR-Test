@@ -17,7 +17,8 @@ private:
 	inline float MFCC::mel_to_hz(float mel);
 	
 	FFT * fft;
-
+	Config *cf;
+	int trace;
 	const int window_lenght;
 
 	int Filters_Number;

@@ -59,7 +59,7 @@ void printfhmm(HMM *hmm)
 
 int main()
 {
-	
+
 	Config *cf = new Config("conf.ini");
 	cf->Exist("STATES");
 	int states, iterations;
@@ -82,8 +82,8 @@ int main()
 	HMM *hmm_s = new HMM(36,cf,"sil");
 	HMM *hmm_a = new HMM(36,cf,"A");
 	HMM *hmm_b = new HMM(36,cf,"B"); 
-	FinalReEstimate *fre = new FinalReEstimate();
-	Recognizer *rec = new Recognizer();
+	FinalReEstimate *fre = new FinalReEstimate(cf);
+	Recognizer *rec = new Recognizer(cf);
 
 
 
@@ -106,15 +106,16 @@ int main()
 	fre->ForwardBackward(pm);
 	fre->UpdateModels();
 
-	printfhmm(hmm_s);
-	printfhmm(hmm_a);
-	printfhmm(hmm_b);
+	//printfhmm(hmm_s);
+	//printfhmm(hmm_a);
+	//printfhmm(hmm_b);
 
 
 	rec->AddHmm(hmm_s);
 	rec->AddHmm(hmm_a);
 	rec->AddHmm(hmm_b);
 	rec->DoRecognition(pm1);
+	//rec->DoRecognition(pm1);
 
 	hmm_s->SaveHmm("S");
 	hmm_a->SaveHmm("A");
@@ -129,112 +130,7 @@ int main()
 	delete hmm_a;
 	delete hmm_b;
 	delete cf;
-	/*
-	for(int i=0; i<300; i++)
-			{
-				printf("buffer_array[%d] = buffer_array[%d];\n",i,400 - 300 + i);
-			}
 	
-	ofstream myFile;
-    myFile.open("mizi.txt");
-	MFCC * test = new MFCC();
-	FFT * fft = new FFT();
-	float data_in[512],data_in1[513],real_out[512],img_out[512], data_out[13], processed[256]; 
-	srand(time(NULL));
-
-	FILE * infile = fopen("a1.wav","rb");		
-	ofstream output;	
-	output.open("invi1_spectrum11.txt", std::ofstream::out | std::ofstream::app);
-	int count = 0, windows=0;
-	short buffer;
-	short int tmp;
-	float tmp1;
-	unsigned short int tmp2;
-	float last_sample = 1;
-	float preemphasis_param = 0.97;
-	int nb;			
-	const float ONEOVERSHORTMAX = 3.0517578125e-5f; 
-	for(int i=0;i<256;i++)
-     processed[i]=0;
-	data_in1[0]=0.0;
-	if (infile)
-	{
-
-		int i=0;
-		nb = fread(&HeaderInfo,1,sizeof(HeaderInfo),infile);
-		
-		printf("%d\n",(int)floor(HeaderInfo.Subchunk2Size/240));
-		printf("%d",(int)floor(HeaderInfo.Subchunk2Size/240)*240);
-		float** mfcc_data = new float*[HeaderInfo.Subchunk2Size/160];
-		for(int i = 0; i < HeaderInfo.Subchunk2Size/160; ++i)
-			mfcc_data[i] = new float[12];
-
-		float** deltas = new float*[HeaderInfo.Subchunk2Size/160];
-		for(int i = 0; i < HeaderInfo.Subchunk2Size/160; ++i)
-			deltas[i] = new float[12];
-
-		float** acceleration = new float*[HeaderInfo.Subchunk2Size/160];
-		for(int i = 0; i < HeaderInfo.Subchunk2Size/160; ++i)
-			acceleration[i] = new float[12];
-
-		while ((nb = fread(&buffer,1,sizeof(buffer),infile))>0)
-		{
-			  
-				data_in[i++] = (float)buffer;
-			    data_in1[i]   = (float)buffer;
-
-			   if (i>=400)
-			   {
-				   
-				   
-				  
-				   
-				   test->Compute(i,12,data_in,mfcc_data[windows]);
-				   
-				   
-				  
-				
-				   windows++;
-				   for(int i=0;i<240;i++)
-							data_in[i]=data_in[i+160];
-					   i=240;
-					
-			   }
-
-			
-		}
-		test -> AddRegression(mfcc_data,deltas,windows,12,2);
-		test -> AddRegression(deltas,acceleration,windows,12,2);
-		for (int j = 0; j < windows; j++)
-		{
-			for (int i = 0; i < 12; i++)
-					{
-						printf("MFCC[%d][%d] = %f\n",j,i,mfcc_data[j][i]);	
-					}
-			for (int i = 0; i < 12; i++)
-					{
-									printf("Deltas[%d][%d] = %f\n",j,i,deltas[j][i]);	
-									
-					}
-			for (int i = 0; i < 12; i++)
-					{
-									printf("Acceleration[%d][%d] = %f\n",j,i,acceleration[j][i]);	
-									
-					}
-			getchar();
-		}
-		
-		
-
-	}
-	
-	
-
-	output.close();
-	
-	*/
-	
-	//getchar();
 	_CrtDumpMemoryLeaks();
 	return 0;
 }

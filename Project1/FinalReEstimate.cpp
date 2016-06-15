@@ -8,10 +8,22 @@
 #include "FinalReEstimate.h"
 
 
-FinalReEstimate::FinalReEstimate(void)
+FinalReEstimate::FinalReEstimate(Config * cf)
 {
+	this->cf=cf;
 	pruneThresh = 2000.0;
     minFrwdP = 10.0; 
+	if (cf != nullptr)
+	{
+		if(cf->Exist("PRUNETHRESH"))
+			pruneThresh = cf->GetConfig("PRUNETHRESH");
+
+		if(cf->Exist("MINFRWDP"))
+			minFrwdP = cf->GetConfig("MINFRWDP");
+
+		if(cf->Exist("TRACE"))
+			trace = cf->GetConfig("TRACE"); 
+	}
 }
 
 
@@ -32,7 +44,7 @@ void FinalReEstimate::AddHmm(HMM *  hmm)
 
 void FinalReEstimate::LoadHmm(std::string hmm_src)
 {
-	HMM * h = new HMM(hmm_src);
+	HMM * h = new HMM(hmm_src, cf);
 	h->SetMinDuration();
 	AddHmm(h);
 }
@@ -40,6 +52,8 @@ void FinalReEstimate::LoadHmm(std::string hmm_src)
 
 void FinalReEstimate::ForwardBackward(ParamAudio * pa)
 {
+	if (trace&TRACE::TOP) 
+		printf("Final ReEstimate %d HMM's with data: %s\n", hmms.size(), std::string(pa->audio_src).c_str());
 	ListHmms(pa);
 	SetBeamTaper(pa->segments,pa->param_frames);
 	outprob = GetProbability(pa);
@@ -307,6 +321,9 @@ double FinalReEstimate::Beta(void)
    
    }
 	delete[] maxP;
+	if (trace&TRACE::DEEP) {
+        printf(" Utterance prob per frame = %e\n",bqt[0]/frames);
+   }
 	return bqt[0];
 }
 

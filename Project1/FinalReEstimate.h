@@ -4,11 +4,12 @@
 class FinalReEstimate
 {
 public:
-	FinalReEstimate(void);
+	FinalReEstimate(Config * cf);
 	~FinalReEstimate(void);
 	std::vector<HMM *> hmms;
 	HMM ** hmm_seq;							//list of hmms ordered by apperence at label file
-	
+	Config *cf;
+	int trace;
 	float *** outprob;
 	double ** alphat;
 	double ** alphat1;

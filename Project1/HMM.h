@@ -14,6 +14,8 @@ public:
 	HMM(void);
 	std::string name;
 	State * state;
+	Config * cf;
+	int trace;
 	float ** transition;
 	float * obs_count;				//counts occupation of the state int trans
 	float ** trans_count;
@@ -26,7 +28,7 @@ public:
 	double minLogExp;
 	int minimum_duration;
 public:
-	HMM(std::string hmm_src);
+	HMM(std::string hmm_src, Config * cf);
 	HMM(int vector_size, Config * cf, std::string l_name);
 	void Initialise(ParamAudio * pa, int iteration);
 	void GetMean(ParamAudio * pa);
@@ -50,5 +52,6 @@ public:
 	void SetMinDuration(void);
 	void FindSO(int * so, int * d, int s);
 	void SaveHmm(std::string out_dir);
+	std::vector<std::string> split(char * str, const char * delimiter);
 };
 

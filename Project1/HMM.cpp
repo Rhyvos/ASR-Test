@@ -15,7 +15,7 @@
 #include <sstream>
 HMM::HMM(void)
 {
-
+	
 }
 
 
@@ -40,8 +40,121 @@ HMM::~HMM(void)
 }
 
 
-HMM::HMM(std::string hmm_src) //load from file
+HMM::HMM(std::string hmm_src, Config *cf) //load from file
 {
+	std::ifstream input(hmm_src,std::ifstream::in);
+	std::vector<std::string> tmp;
+	char buffer[2048];
+	int state_nr;
+	int vs,s;
+
+	minVar  = 1.0E-2;
+	epsilon = 1.0E-4;
+	minLogExp = -log(-LZERO);
+	minimum_duration =-1;
+	if (cf != nullptr)
+	{
+			if(cf->Exist("MINVAR"))
+				minVar = cf->GetConfig("MINVAR");
+
+			if(cf->Exist("EPSILON"))
+				epsilon = cf->GetConfig("EPSILON");
+
+			if(cf->Exist("TRACE"))
+			trace = cf->GetConfig("TRACE"); 
+
+	}
+
+
+	while (input.good()) {
+		input.getline(buffer,2048);
+		tmp = split(buffer," \t");
+		if(tmp.size() > 0)
+		{
+			if(tmp[0].compare("<HMMNAME>") == 0)
+				name = tmp[1];
+
+			if(tmp[0].compare("<HMMSTATES>") == 0)
+			{
+				states = atoi(tmp[1].c_str()); 
+				state = new State[states-2];
+			}
+
+
+			if(tmp[0].compare("<STATE>") == 0)
+			{
+				state_nr = atoi(tmp[1].c_str()); 
+				state[state_nr-1].state_nr = state_nr;
+				input.getline(buffer,2048);
+				tmp = split(buffer," \t");
+
+				if(tmp[0].compare("<MEAN>") == 0)
+				{
+					vs = atoi(tmp[1].c_str()); 
+					vector_size = vs;
+					state[state_nr-1].mean = new float[vs];
+					state[state_nr-1].old_mean = new float[vs];
+					input.getline(buffer,2048);
+					tmp = split(buffer," \t");
+					for (int i = 0; i < vs; i++)
+					{
+						state[state_nr-1].mean[i] = atof(tmp[i].c_str());
+					}
+				}
+
+				input.getline(buffer,2048);
+				tmp = split(buffer," \t");
+
+				if(tmp[0].compare("<VARIANCE>") == 0)
+				{
+					vs = atoi(tmp[1].c_str()); 
+					state[state_nr-1].var = new float[vs];
+					state[state_nr-1].old_var = new float[vs];
+					input.getline(buffer,2048);
+					tmp = split(buffer," \t");
+					for (int i = 0; i < vs; i++)
+					{
+						state[state_nr-1].var[i] = atof(tmp[i].c_str());
+					}
+				}
+
+				input.getline(buffer,2048);
+				tmp = split(buffer," \t");
+
+				if(tmp[0].compare("<GCONST>") == 0)
+					state[state_nr-1].g_const = atof(tmp[1].c_str());
+
+
+			}
+
+			if(tmp[0].compare("<TRANSP>") == 0)
+			{
+				s = atoi(tmp[1].c_str()); 
+				transition = new float*[s];
+				trans_count = new float*[s];
+				obs_count = new float[s];
+				for (int i = 0; i < s; i++)
+				{
+					transition[i] = new float[states];
+					trans_count[i] = new float[states];
+					input.getline(buffer,2048);
+					tmp = split(buffer," \t");
+					for (int j = 0; j < s; j++)
+					{
+						transition[i][j] = log(atof(tmp[j].c_str()));
+
+					}
+				}
+
+			}
+
+
+
+
+
+		}
+	}
+	input.close();
 }
 
 
@@ -62,6 +175,8 @@ HMM::HMM(int vector_size, Config * cf, std::string l_name): vector_size(vector_s
 
 			if(cf->Exist("STATES"))
 				states = cf->GetConfig("STATES");
+			if(cf->Exist("TRACE"))
+			trace = cf->GetConfig("TRACE"); 
 	}
 
 	if(states<3 || vector_size<1)
@@ -118,21 +233,25 @@ void HMM::Initialise(ParamAudio * pa, int iteration)
 	bool converged = false;   
 	int * states_vec;
 	int * mixes;
-	int j;
+	int j,ntu;
 	GetMean(pa);
 	GetVariance(pa);
 	FindGConst();
 	totalP = LZERO;
+	if (trace & TRACE::TOP || trace & TRACE::DEEP)
+		printf("Initialise HMM(%s) with data: %s\n", std::string(name).c_str(), std::string(pa->audio_src).c_str());
+
 	for (int i = 0; !converged && i < iteration; i++)
 	{
 		ResetOldParams();
+		ntu=0;
 		for (j = 0, newP = 0; j < pa->segments; j++)
 		{
 			if(!pa->os[j].l->name.compare(name) && pa->os[j].frames >= states-2)
 			{
 				states_vec = new int[pa->os[j].frames];
 				mixes = new int[pa->os[j].frames];
-
+				ntu++;
 				newP += ViterbiAlg(pa->os+j,states_vec,mixes);
 				UpdateCounts(pa->os+j,states_vec);
 				delete[] mixes;
@@ -151,7 +270,18 @@ void HMM::Initialise(ParamAudio * pa, int iteration)
 			UpdateVar();
 			UpdateTransition();
 		}
+
+		
+
 		totalP = newP;
+		if (trace & TRACE::DEEP)
+		{
+			printf("Ave LogProb at iter %d = %10.5f using %d examples",
+				i,totalP,ntu);
+			if (i >= 1)
+				printf("  change = %10.5f",delta);
+			printf("\n"); 
+		}
 
 	}
 
@@ -561,6 +691,11 @@ void HMM::UpdateTransition(void)
 
 void HMM::ReEstimate(ParamAudio * pa, int iterations)
 {
+
+
+	if (trace & TRACE::TOP || trace & TRACE::DEEP)
+		printf("ReEstimate HMM(%s) with data: %s\n", std::string(name).c_str(), std::string(pa->audio_src).c_str());
+
 	float ** prob = NULL;
 	int max_obs=0,ntu;
 	double ap,bp;
@@ -625,11 +760,14 @@ void HMM::ReEstimate(ParamAudio * pa, int iterations)
 		
 		totalP = newP;
 
-		printf("Ave LogProb at iter %d = %10.5f using %d examples",
-			i,totalP,ntu);
-         if (i >= 1)
-            printf("  change = %10.5f",delta);
-         printf("\n");
+		if (trace & TRACE::DEEP)
+		{
+			printf("Ave LogProb at iter %d = %10.5f using %d examples",
+				i,totalP,ntu);
+			if (i >= 1)
+				printf("  change = %10.5f",delta);
+			printf("\n"); 
+		}
 
 	}
 
@@ -911,10 +1049,11 @@ std::string FormatFloat(float f)
 void HMM::SaveHmm(std::string out_dir)
 {
 	std::ofstream output(out_dir,std::ofstream::out);
-	
+	output<<"<HMMNAME> "<<name<<std::endl;
+	output<<"<HMMSTATES> "<<states;
 	for (int i = 0; i < states-2; i++)
 	{
-		output<<"\n<STATE> "<<state[i].state_nr+1<<std::endl;
+		output<<"\n<STATE> "<<state[i].state_nr<<std::endl;
 		output<<"<MEAN> "<<vector_size<<std::endl;
 		for (int j = 0; j < vector_size; j++)
 		{
@@ -942,4 +1081,18 @@ void HMM::SaveHmm(std::string out_dir)
 
 	output.close();
 
+}
+
+
+std::vector<std::string> HMM::split(char * str, const char * delimiter)
+{
+	std::vector<std::string> internal;
+	char * buff;
+	buff = strtok(str,delimiter);
+	while(buff != NULL) {
+		internal.push_back(buff);
+		buff = strtok(NULL,delimiter);
+	}
+  
+	return internal;
 }

@@ -48,6 +48,9 @@ Audio::Audio(Config * cf)
 
 		if(cf->Exist("REGRESSIONWINDOW"))
 			regression_window = cf->GetConfig("REGRESSIONWINDOW"); 
+
+		if(cf->Exist("TRACE"))
+			trace = cf->GetConfig("TRACE"); 
 	}
 }
 
@@ -73,7 +76,6 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	
 	ParamAudio * pm;
 	pm = new ParamAudio;
-	
 	int bytes;
 
 	bytes = fread(&pm->audio_header,1,sizeof(pm->audio_header),audio);
@@ -123,7 +125,8 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 			index = frame_overlap;
 		}
 	}
-
+	if(trace & TRACE::TOP)
+		printf("Extracted %d observation from file %s\n",frames,std::string(audio_src).c_str());
 	/*if(index > frame_overlap)
 	{
 		mfcc->Compute(index,cep_number,buffer_array,coef[frame_index++]);	
@@ -136,7 +139,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	
 	if(Labels.size() <= 0)
 	{
-		fprintf(stderr,"Bad label file: %s, proceed segmentation without label file\n",label_src);
+		fprintf(stderr,"No label file: %s, proceed segmentation without label file\n",label_src);
 		if(label_src != NULL)
 			pm->laber_scr = label_src;
 		else 
@@ -178,6 +181,9 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		int i=0;
 		pm->os = new ObservationSegment[pm->segments];
 
+		if(trace & TRACE::TOP)
+			printf("Proccess %d labels\n",Labels.size());
+
 		for(std::vector<Label*>::iterator l = Labels.begin(); l != Labels.end(); l++)
 		{
 			int start_frame = (*l)->start/sample_delta;
@@ -209,6 +215,8 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 				else
 					pm->os[i].frames = end_frame - start_frame;
 				pm->os[i].l = *l;
+				if(trace & TRACE::DEEP)
+					printf("Added label %s, start=%d, end=%d to ParamAudio\n",std::string(pm->os[i].l->name).c_str() ,pm->os[i].l->start ,pm->os[i].l->end );
 				i++;
 			}
 			

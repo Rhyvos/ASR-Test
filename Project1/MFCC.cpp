@@ -28,7 +28,7 @@ MFCC::MFCC(int window_lenght, float low_freq, float high_freq, int sample_rate,C
 	preemphasis_param = 0.97;
 	CepLifter = 22;
 	Filters_Number = 24;
-
+	this->cf = cf;
 	if (cf != nullptr)
 	{
 		if(cf->Exist("PREEMPHASIS"))
@@ -39,6 +39,9 @@ MFCC::MFCC(int window_lenght, float low_freq, float high_freq, int sample_rate,C
 
 		if(cf->Exist("FILTERNUMBER"))
 			Filters_Number = cf->GetConfig("FILTERNUMBER"); 
+
+		if(cf->Exist("TRACE"))
+			trace = cf->GetConfig("TRACE"); 
 	}
 
 	float tmp_low = hz_to_mel(low_freq);

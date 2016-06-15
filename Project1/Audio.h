@@ -8,6 +8,7 @@ public:
 	Audio(Config * cf = nullptr);
 	~Audio(void);
 	Config * cf;
+	int trace;
 	int frame_size;
 	int frame_overlap;
 	int low_freq;

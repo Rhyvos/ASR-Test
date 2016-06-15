@@ -129,3 +129,11 @@ struct TokenSet
 
 
 
+enum TRACE
+{
+	NO_TRACE	=	0,
+	TOP			=	1,
+	DEEP		=	2,
+};
+
+
