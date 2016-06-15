@@ -315,4 +315,7 @@ void Recognizer::SaveTranscript(ParamAudio * pa)
 		output<<(transcript[i].start * a * sample_delta)/10000000.0<<" "<<(transcript[i].end * a * sample_delta)/10000000.0<<" "<<transcript[i].name<<std::endl;
 	}
 	transcript.clear();
+	output.close();
+	if(trace & TRACE::TOP)
+			printf("Transcription for file %s saved into %s\n",std::string(pa->audio_src).c_str(),std::string(pa->audio_src+".lab").c_str());
 }

@@ -65,6 +65,7 @@ HMM::HMM(std::string hmm_src, Config *cf) //load from file
 
 	}
 
+	
 
 	while (input.good()) {
 		input.getline(buffer,2048);
@@ -72,8 +73,11 @@ HMM::HMM(std::string hmm_src, Config *cf) //load from file
 		if(tmp.size() > 0)
 		{
 			if(tmp[0].compare("<HMMNAME>") == 0)
+			{	
 				name = tmp[1];
-
+				if(trace&TRACE::TOP)
+					printf("Loading HMM(%s)\n",name.c_str());
+			}
 			if(tmp[0].compare("<HMMSTATES>") == 0)
 			{
 				states = atoi(tmp[1].c_str()); 
@@ -155,6 +159,9 @@ HMM::HMM(std::string hmm_src, Config *cf) //load from file
 		}
 	}
 	input.close();
+
+	if(trace&TRACE::DEEP)
+		PrintfHMM();
 }
 
 
@@ -1046,9 +1053,11 @@ std::string FormatFloat(float f)
 
 }
 
-void HMM::SaveHmm(std::string out_dir)
+void HMM::SaveHmm()
 {
-	std::ofstream output(out_dir,std::ofstream::out);
+	if(trace & TRACE::TOP || trace & TRACE::DEEP)
+		printf("Saving HMM(%s) to file: %s \n",name.c_str(),std::string(name+".hmm").c_str());
+	std::ofstream output(std::string(name+".hmm").c_str(),std::ofstream::out);
 	output<<"<HMMNAME> "<<name<<std::endl;
 	output<<"<HMMSTATES> "<<states;
 	for (int i = 0; i < states-2; i++)
@@ -1095,4 +1104,38 @@ std::vector<std::string> HMM::split(char * str, const char * delimiter)
 	}
   
 	return internal;
+}
+
+
+void HMM::PrintfHMM(void)
+{
+
+	printf("HMM: %s:",name.c_str());
+	for (int i = 0; i < states-2; i++)
+	{
+		printf("\nState %d:\n",state[i].state_nr);
+		printf("Mean\n");
+		for (int j = 0; j < vector_size; j++)
+		{
+			printf("%f\t",state[i].mean[j]);
+
+		}
+		printf("\nVariance\n");
+		for (int j = 0; j < vector_size; j++)
+		{
+			printf("%f\t",state[i].var[j]);
+
+		}
+		printf("\nGConst\t%f",state[i].g_const);
+
+	}
+	printf("\n");
+	for (int i = 0; i <states; i++)
+	{
+		for (int j = 0; j < states; j++)
+		{
+			printf("%f ",exp(transition[i][j]));
+		}
+		printf("\n");
+	}
 }

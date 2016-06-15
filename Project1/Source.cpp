@@ -9,130 +9,159 @@
 #include <iostream>
 #include "MFCC.h"
 #include "FFT.h"
-#include <ctime>
-#include <stdio.h>
-#include <stdlib.h>
-#include <fstream>
-#include <cmath>
-#include <vector>
 #include "Audio.h"
-#include "hmm.h"
+#include "HMM.h"
 #include "FinalReEstimate.h"
 #include "Recognizer.h"
 #include "Config.h"
+#include <fstream>
 //#define _CRT_SECURE_NO_DEPRECATE
 #pragma warning (disable : 4996)
 using namespace std;
 
-void printfhmm(HMM *hmm)
-{
-	for (int i = 0; i < hmm->states-2; i++)
-	{
-		printf("\nState %d:\n",hmm->state[i].state_nr);
-		printf("Mean\n");
-		for (int j = 0; j < hmm->vector_size; j++)
-		{
-			printf("%f\t",hmm->state[i].mean[j]);
 
-		}
-		printf("\nVariance\n");
-		for (int j = 0; j < hmm->vector_size; j++)
-		{
-			printf("%f\t",hmm->state[i].var[j]);
-
-		}
-		printf("\nGConst\t%f",hmm->state[i].g_const);
-
-	}
-	printf("\n");
-	for (int i = 0; i <hmm->states; i++)
-	{
-		for (int j = 0; j < hmm->states; j++)
-		{
-			printf("%f ",exp(hmm->transition[i][j]));
-		}
-		printf("\n");
-	}
+std::vector<std::string> splitstring(char * str,const char * delimiter) {
+  std::vector<std::string> internal;
+  char * buff;
+  buff = strtok(str,delimiter);
+  while(buff != NULL) {
+    internal.push_back(buff);
+	buff = strtok(NULL,delimiter);
+  }
+  
+  return internal;
 }
 
 
-
-int main()
+int main(int argc, char * argv[])
 {
-
-	Config *cf = new Config("conf.ini");
-	cf->Exist("STATES");
-	int states, iterations;
-	Audio audio(cf);
-	ParamAudio *pm=audio.ParamAudioFile("train1.wav","train1.lab");
-	ParamAudio *pm1=audio.ParamAudioFile("train1.wav",NULL);
-	ParamAudio *pm2=audio.ParamAudioFile("test1.wav",NULL);
-
-	if(cf->Exist("STATES"))
-		states = cf->GetConfig("STATES");
-	else
-		states=5;
-
-	if(cf->Exist("ITERATIONS"))
-		iterations = cf->GetConfig("ITERATIONS");
-	else
-		iterations=10;
-
-
-	HMM *hmm_s = new HMM(36,cf,"sil");
-	HMM *hmm_a = new HMM(36,cf,"A");
-	HMM *hmm_b = new HMM(36,cf,"B"); 
-	FinalReEstimate *fre = new FinalReEstimate(cf);
-	Recognizer *rec = new Recognizer(cf);
-
-
-
-	hmm_s->Initialise(pm,iterations);
-	hmm_s->ReEstimate(pm,iterations);
+	Config *cf = NULL;
 	
-	hmm_a->Initialise(pm,iterations);
-	hmm_a->ReEstimate(pm,iterations);
+	vector<ParamAudio *> pa;
+	vector<HMM *> hmms;
+	vector<string> tmp;
 
-	hmm_b->Initialise(pm,iterations);
-	hmm_b->ReEstimate(pm,iterations);
+	int iterations = 10;
+	for (int i = 1; i < argc; i++)
+	{
+		if(string(argv[i]).compare("-c") == 0)
+		{
+			i++;
+			cf = new Config(argv[i]);
+			if(cf->Exist("ITERATIONS"))
+				iterations = cf->GetConfig("ITERATIONS");
+		}
 
-	fre->AddHmm(hmm_s);
-	fre->AddHmm(hmm_a);
-	fre->AddHmm(hmm_b);
-	fre->ForwardBackward(pm);
-	fre->UpdateModels();
-	fre->ForwardBackward(pm);
-	fre->UpdateModels();
-	fre->ForwardBackward(pm);
-	fre->UpdateModels();
+		if(string(argv[i]).compare("-s") == 0)
+		{
+			i++;
+			Audio *audio = new Audio(cf);
+			ifstream input(argv[i],ifstream::in);
+			char buffer[256];
+			while (input.good()) 
+			{
+				input.getline(buffer,256);
+				tmp = splitstring(buffer," \t");
+				if(tmp.size() == 2)
+					pa.push_back(audio->ParamAudioFile(tmp[0].c_str(),tmp[1].c_str()));
+				else if(tmp.size() == 1)
+					pa.push_back(audio->ParamAudioFile(tmp[0].c_str(),""));
+				else
+					fprintf(stderr,"wrong script line: %s\n",string(buffer).c_str());
+			}
+			input.close();
+			delete audio;
+		}
 
-	//printfhmm(hmm_s);
-	//printfhmm(hmm_a);
-	//printfhmm(hmm_b);
+		if(string(argv[i]).compare("-h") == 0)
+		{
+			i++;
+			ifstream input(argv[i],ifstream::in);
+			char buffer[256];
+			while (input.good()) 
+			{
+				input.getline(buffer,256);
+				tmp = splitstring(buffer," \t");
+				if(tmp.size() == 1)
+					hmms.push_back(new HMM(tmp[0].c_str(),cf));
+				else
+					fprintf(stderr,"wrong hmm list line: %s\n",string(buffer).c_str());
+			}
+			input.close();
+		}
 
+		if(string(argv[i]).compare("-i") == 0)
+		{
+			for (int j = 0; j < pa.size(); j++)
+			{
+				for (int k = 0; k < hmms.size(); k++)
+				{
+					hmms[k]->Initialise(pa[j],iterations);
+				}
+			}
+		}
+		else if(string(argv[i]).compare("-t") == 0)
+		{
+			for (int j = 0; j < pa.size(); j++)
+			{
+				for (int k = 0; k < hmms.size(); k++)
+				{
+					hmms[k]->ReEstimate(pa[j],iterations);
+				}
+			}
 
-	rec->AddHmm(hmm_s);
-	rec->AddHmm(hmm_a);
-	rec->AddHmm(hmm_b);
-	rec->DoRecognition(pm1);
-	//rec->DoRecognition(pm1);
+		}
+		else if(string(argv[i]).compare("-f") == 0)
+		{
+			FinalReEstimate *fr = new FinalReEstimate(cf);
+			for (int k = 0; k < hmms.size(); k++)
+				fr->AddHmm(hmms[k]);
 
-	hmm_s->SaveHmm("S");
-	hmm_a->SaveHmm("A");
-	hmm_b->SaveHmm("B");
-	delete pm;
-	delete pm1;
-	delete pm2;
+			for (int j = 0; j < pa.size(); j++)
+				fr->ForwardBackward(pa[j]);
 
-	delete fre;
-	delete rec;
-	delete hmm_s;
-	delete hmm_a;
-	delete hmm_b;
-	delete cf;
+			delete fr;
+		}
+		else if(string(argv[i]).compare("-r") == 0)
+		{
+			Recognizer *rec = new Recognizer(cf);
+			for (int k = 0; k < hmms.size(); k++)
+				rec->AddHmm(hmms[k]);
+
+			for (int j = 0; j < pa.size(); j++)
+				rec->DoRecognition(pa[j]);
+			delete rec;
+		}
+
+	}
 	
-	_CrtDumpMemoryLeaks();
+
+	for (int i = 0; i < pa.size(); i++)
+	{
+		delete pa[i];
+	}
+
+	for (int i = 0; i < hmms.size(); i++)
+	{
+		hmms[i]->SaveHmm();
+		delete hmms[i];
+	}
+
+	if(cf != NULL)
+	{
+		delete cf;
+	}
+	tmp.clear();
+	pa.clear();
+	hmms.clear();
+
+	
+#ifdef _DEBUG
+	_CrtDumpMemoryLeaks();  
+#endif // _DEBUG
+
 	return 0;
+	
 }
 
 
