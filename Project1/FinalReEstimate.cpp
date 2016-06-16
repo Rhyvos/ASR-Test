@@ -94,7 +94,9 @@ void FinalReEstimate::SetBeamTaper(int Q, int T)
 	qHi = new int[T];
 	qLo = new int[T];
    /* Set leading taper */
-	q=0;dq=hmm_seq[q]->minimum_duration;i=0;
+	q=0;
+	dq=hmm_seq[q]->minimum_duration;
+	i=0;
    for (t=0;t<T;t++) {
       while (i==dq) {
          i=0;
@@ -167,7 +169,7 @@ float FinalReEstimate::OutP(ParamAudio * pa, int fr_number, int segment, int sta
 {
 	if(pa->coef_num*3!=hmm_seq[segment]->vector_size)
 	{
-		fprintf(stderr,"FinalReEstimate::OutP:Audio param vector size diffrent then state vector size: %d!=%s \n",pa->coef_num,hmm_seq[segment]->vector_size);
+		fprintf(stderr,"FinalReEstimate::OutP:Audio param vector size diffrent then state vector size: %d!=%d \n",pa->coef_num,hmm_seq[segment]->vector_size);
 		return 0;
 	}
 
@@ -212,6 +214,10 @@ double FinalReEstimate::Beta(void)
 	int Q,endq,startq,st,lst=0,q_at_gMax,t,q;
 	double *maxP,*bq1t1,*bqt = NULL;
 	maxP = new double[seq_num];
+	for (int i = 0; i < seq_num; i++)
+	{
+		maxP[i]=0.0;
+	}
 	HMM * hmm;
 	double a1N=0.0,a,y,x,gMax,lMax;
 	beta = new double**[frames];
@@ -221,6 +227,10 @@ double FinalReEstimate::Beta(void)
 		for (int j = 0; j < seq_num; j++)
 		{
 			beta[i][j] = new double[hmm_seq[j]->states];
+			for (int k = 0; k < hmm_seq[j]->states; k++)
+			{
+				beta[i][j][k] = LZERO;
+			}
 		}
 	}
 	Q = seq_num-1;
@@ -249,7 +259,6 @@ double FinalReEstimate::Beta(void)
 	}
 
 	for (t=frames-2;t>=0;t--) {      
-
       gMax = LZERO;   q_at_gMax = 0;    /* max value of beta at time t */
       startq = qHi[t+1];
       endq = (qLo[t+1]==0)?0:((qLo[t]>=qLo[t+1])?qLo[t]:qLo[t+1]-1);
@@ -258,8 +267,6 @@ double FinalReEstimate::Beta(void)
       /*  unless this is outside the beam taper.     */
       /*  + 1 to allow for state q+1[1] -> q[N]      */
       /*  + 1 for each tee model preceding endq.     */
-    
-      
       for (q=startq;q>=endq;q--) {
          lMax = LZERO;                 /* max value of beta in model q */
 		 hmm = hmm_seq[q]; 
@@ -310,6 +317,7 @@ double FinalReEstimate::Beta(void)
       }
      qHi[t] = startq;
       while (gMax-maxP[endq]>pruneThresh){
+
 		 delete[] beta[t][endq];
          beta[t][endq] = NULL;
          ++endq;                   /* raise endq till thresh reached */
@@ -398,6 +406,7 @@ void FinalReEstimate::Alpha(ParamAudio * pa)
          //up_hmm = up_qList[q];
          aqt = alphat[q];
          bqt = beta[t][q];
+
          bqt1 = (t==frames-1) ? NULL:beta[t+1][q];
          aqt1 = (t==1)      ? NULL:alphat1[q];
 		 bq1t = (q==seq_num-1) ? NULL:beta[t][q+1];
@@ -475,8 +484,8 @@ void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, dou
 
    while (pr-MaxModelProb(sq,t-1,sq)>minFrwdP){
       ++sq;                /* raise start point */
-      //if (sq>=qHi[t]) 
-         //fprintf(stderr,"StepAlpha: Alpha prune failed sq(%d) > qHi(%d)\n",sq,qHi[t]);
+      if (sq>qHi[t]) 
+         fprintf(stderr,"StepAlpha: Alpha prune failed sq(%d) > qHi(%d)\n",sq,qHi[t]);
    }
    if (sq<qLo[t])       /* start-point below beta beam so pull it back */
       sq = qLo[t];
@@ -487,8 +496,8 @@ void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, dou
    /*       + 1 for each tee model following eq.  */
    while (pr-MaxModelProb(eq,t-1,sq)>minFrwdP){
       --eq;             /* lower end-point */
-      //if (eq<sq) 
-         //fprintf(stderr,"StepAlpha: Alpha prune failed eq(%d) < sq(%d)\n",eq,sq);
+      if (eq<sq) 
+         fprintf(stderr,"StepAlpha: Alpha prune failed eq(%d) < sq(%d)\n",eq,sq);
    }
    while (eq<Q && hmm_seq[eq]->minimum_duration==0) eq++;
    if (eq>qHi[t])  /* end point above beta beam so pull it back */
@@ -571,7 +580,7 @@ void FinalReEstimate::SetOcct(HMM * hmm , int q, double * aqt, double * bqt, dou
    
    N=hmm->states-1;
    for (i=0;i<=N;i++) {
-      x = aqt[i]+bqt[i];
+		x =aqt[i] + bqt[i];
       if (i==1 && bq1t != NULL && hmm->transition[0][N] > LSMALL)
 		  x = LAdd(x,aqt[0]+bq1t[0]+hmm->transition[0][N]);
       x -= pr;
@@ -626,7 +635,12 @@ void FinalReEstimate::UpdateParms(HMM *  hmm, ParamAudio *  pa, int t, double * 
    N = hmm->states-1;
    for (int j=1;j<N;j++) 
    {
-	  x = aqt[j]+bqt[j]-pr; 
+ 	  if(bqt == NULL)
+		x = aqt[j]-pr;
+	  else if(aqt == NULL)
+		x = bqt[j]-pr;
+	  else
+		x =aqt[j] + bqt[j] - pr;
          if (-x<minFrwdP) 
 		 {
                  Lr = exp(x);

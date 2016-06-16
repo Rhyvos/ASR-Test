@@ -103,6 +103,10 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	coef = new float*[frames];
 	delta = new float*[frames];
 	acc = new float*[frames];
+	if(acc || delta || coef)
+	{
+
+	}
 
 
 	for(int i=0 ; i<frames ;i++ )
@@ -110,6 +114,12 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 		coef[i] = new float[cep_number];
 		delta[i] = new float[cep_number];
 		acc[i] = new float[cep_number];
+		for (int j = 0; j < cep_number; j++)
+		{
+			coef[i][j] = 0.0;
+			delta[i][j] = 0.0;
+			acc[i][j] = 0.0;
+		}
 	}
 
 	int c=0;
@@ -204,7 +214,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 				}
 				else
 				{
-					fprintf(stderr,"Label[%d]: wrong start frame\n",i,start_frame);
+					fprintf(stderr,"Label[%d]: wrong start frame %d\n",i,start_frame);
 					continue;
 				}
 

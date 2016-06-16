@@ -40,7 +40,7 @@ int main(int argc, char * argv[])
 	vector<ParamAudio *> pa;
 	vector<HMM *> hmms;
 	vector<string> tmp;
-
+	vector<string> tmp1;
 	int iterations = 10;
 	for (int i = 1; i < argc; i++)
 	{
@@ -51,6 +51,7 @@ int main(int argc, char * argv[])
 			if(cf->Exist("ITERATIONS"))
 				iterations = cf->GetConfig("ITERATIONS");
 		}
+
 
 		if(string(argv[i]).compare("-s") == 0)
 		{
@@ -84,6 +85,38 @@ int main(int argc, char * argv[])
 				tmp = splitstring(buffer," \t");
 				if(tmp.size() == 1)
 					hmms.push_back(new HMM(tmp[0].c_str(),cf));
+				else
+					fprintf(stderr,"wrong hmm list line: %s\n",string(buffer).c_str());
+			}
+			input.close();
+		}
+
+
+		if(string(argv[i]).compare("-g") == 0)
+		{
+			i++;
+			ifstream input(argv[i],ifstream::in);
+			char buffer[256];
+			while (input.good()) 
+			{
+				input.getline(buffer,256);
+				tmp = splitstring(buffer," \t");
+				
+
+				if(tmp.size() == 1)
+				{
+					string s;
+					size_t st,en;
+					s = tmp[0];
+					st = s.find_last_of("/");
+					en = s.find_last_of(".");
+					if(st == string::npos)
+						st = 0;
+					if( en == string::npos)
+						en = s.size();
+					s = s.substr(st+1,en-st-1);
+					hmms.push_back(new HMM(cf,s.c_str())); 
+				}
 				else
 					fprintf(stderr,"wrong hmm list line: %s\n",string(buffer).c_str());
 			}

@@ -1,0 +1,3 @@
+hmms/A.hmm
+hmms/B.hmm
+hmms/sil.hmm

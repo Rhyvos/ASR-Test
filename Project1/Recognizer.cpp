@@ -124,20 +124,18 @@ void Recognizer::DoRecognition(ParamAudio * pa)
 
 		if(trace & TRACE::DEEP)
 			printf("Observation @%d most like node %s\n",i,genMaxNode->hmm->name.c_str());
-
-		
-		//tokenpropagation(bestwordtoken)
 	}
 
 	if(wordMaxTok.path != NULL && ((trace & TRACE::TOP) || (trace & TRACE::DEEP)))
 	{
 		ReadPath(wordMaxTok.path);
-		float start, end;
+		float start,end;
 		start = (wordMaxTok.path->prev==NULL)?0:wordMaxTok.path->prev->frame;
 		end = pa->os[0].frames;
 		transcript.push_back(Label(std::string(wordMaxNode->hmm->name).c_str(),start,end));
 	}
-
+	if(transcript.size() == 0)
+		transcript.push_back(Label(std::string(wordMaxNode->hmm->name).c_str(),0,pa->os[0].frames));
 
 	SaveTranscript(pa);
 	FreeMemory();

@@ -13,6 +13,7 @@ public:
 //private:
 	HMM(void);
 	std::string name;
+	std::string source;
 	State * state;
 	Config * cf;
 	int trace;
@@ -29,7 +30,7 @@ public:
 	int minimum_duration;
 public:
 	HMM(std::string hmm_src, Config * cf);
-	HMM(int vector_size, Config * cf, std::string l_name);
+	HMM(Config * cf, std::string l_name);
 	void Initialise(ParamAudio * pa, int iteration);
 	void GetMean(ParamAudio * pa);
 	void GetVariance(ParamAudio * pa);

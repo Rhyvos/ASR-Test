@@ -47,7 +47,7 @@ HMM::HMM(std::string hmm_src, Config *cf) //load from file
 	char buffer[2048];
 	int state_nr;
 	int vs,s;
-
+	source = hmm_src;
 	minVar  = 1.0E-2;
 	epsilon = 1.0E-4;
 	minLogExp = -log(-LZERO);
@@ -165,13 +165,16 @@ HMM::HMM(std::string hmm_src, Config *cf) //load from file
 }
 
 
-HMM::HMM(int vector_size, Config * cf, std::string l_name): vector_size(vector_size), name(l_name)
+HMM::HMM(Config * cf, std::string l_name): name(l_name)
 {
+	if(trace & TRACE::TOP)
+		printf("Generating new HMM seed (%s)\n",l_name.c_str());
 	minVar  = 1.0E-2;
 	epsilon = 1.0E-4;
 	states	= 5;
 	minLogExp = -log(-LZERO);
-
+	source = l_name + ".hmm";
+	vector_size = 36;
 	if (cf != nullptr)
 	{
 			if(cf->Exist("MINVAR"))
@@ -182,8 +185,12 @@ HMM::HMM(int vector_size, Config * cf, std::string l_name): vector_size(vector_s
 
 			if(cf->Exist("STATES"))
 				states = cf->GetConfig("STATES");
+
 			if(cf->Exist("TRACE"))
-			trace = cf->GetConfig("TRACE"); 
+				trace = cf->GetConfig("TRACE"); 
+
+			if(cf->Exist("CEPNUMBER"))
+				vector_size = cf->GetConfig("CEPNUMBER") * 3; 
 	}
 
 	if(states<3 || vector_size<1)
@@ -207,6 +214,7 @@ HMM::HMM(int vector_size, Config * cf, std::string l_name): vector_size(vector_s
 			state[i].var[j]=1.0;
 		}
 		state[i].state_nr=i+1;
+		state[i].g_const = 0.0;
 	}
 
 	transition = new float*[states];
@@ -442,7 +450,7 @@ float HMM::OutP(ObservationSegment * os, int fr_number, int state_nr)
 {
 	if(os->frame_lenght*3!=vector_size)
 	{
-		fprintf(stderr,"HMM.OpuP:Audio param vector size diffrent then state vector size: %d!=%s \n",os->frame_lenght*3,vector_size);
+		fprintf(stderr,"HMM.OpuP:Audio param vector size diffrent then state vector size: %d!=%d \n",os->frame_lenght*3,vector_size);
 		return 0;
 	}
 
@@ -1055,9 +1063,10 @@ std::string FormatFloat(float f)
 
 void HMM::SaveHmm()
 {
+
 	if(trace & TRACE::TOP || trace & TRACE::DEEP)
-		printf("Saving HMM(%s) to file: %s \n",name.c_str(),std::string(name+".hmm").c_str());
-	std::ofstream output(std::string(name+".hmm").c_str(),std::ofstream::out);
+		printf("Saving HMM(%s) to file: %s \n",name.c_str(),source.c_str());
+	std::ofstream output(source,std::ofstream::out);
 	output<<"<HMMNAME> "<<name<<std::endl;
 	output<<"<HMMSTATES> "<<states;
 	for (int i = 0; i < states-2; i++)

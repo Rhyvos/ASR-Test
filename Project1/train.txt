@@ -1,1 +1,1 @@
-train1.wav
+data/audio/train1.wav data/labels/train1.lab

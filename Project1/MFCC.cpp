@@ -28,6 +28,7 @@ MFCC::MFCC(int window_lenght, float low_freq, float high_freq, int sample_rate,C
 	preemphasis_param = 0.97;
 	CepLifter = 22;
 	Filters_Number = 24;
+	CepLiftSize = 0;
 	this->cf = cf;
 	if (cf != nullptr)
 	{
@@ -191,6 +192,10 @@ void MFCC::Compute(int num_samples, int num_cep, float * input, float * output)
 
 
 	float *tmp = new float[Filters_Number];
+	for (int i = 0; i < Filters_Number; i++)
+	{
+		tmp[i] = 0.0;
+	}
 	DCT(Filters_Number,false,filter_energy,tmp);
 
 	for (int i = 0; i < num_cep; i++)
@@ -280,7 +285,9 @@ void MFCC::WeightCepstrum(float * input , int n)
       GenCepLift(CepLifter,n);
    
    for (i=0;i<n;i++)
-		input[i] *= CepLift[i];
+	   input[i] *= CepLift[i]; 
+
+
 }
 
 
