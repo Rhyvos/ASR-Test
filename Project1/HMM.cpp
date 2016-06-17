@@ -146,6 +146,8 @@ HMM::HMM(std::string hmm_src, Config *cf) //load from file
 					for (int j = 0; j < s; j++)
 					{
 						transition[i][j] = log(atof(tmp[j].c_str()));
+						if (transition[i][j]<LSMALL) 
+							transition[i][j] = LZERO;
 
 					}
 				}
@@ -242,44 +244,52 @@ HMM::HMM(Config * cf, std::string l_name): name(l_name)
 }
 
 
-void HMM::Initialise(ParamAudio * pa, int iteration)
+void HMM::Initialise(std::vector<ParamAudio *> pav, int iteration)
 {
 	float totalP,newP,delta;
 	bool converged = false;   
 	int * states_vec;
 	int * mixes;
 	int j,ntu;
-	GetMean(pa);
-	GetVariance(pa);
+	ParamAudio * pa;
+	GetMean(pav);
+	GetVariance(pav);
 	FindGConst();
 	totalP = LZERO;
-	if (trace & TRACE::TOP || trace & TRACE::DEEP)
-		printf("Initialise HMM(%s) with data: %s\n", std::string(name).c_str(), std::string(pa->audio_src).c_str());
+	
 
 	for (int i = 0; !converged && i < iteration; i++)
 	{
 		ResetOldParams();
 		ntu=0;
-		for (j = 0, newP = 0; j < pa->segments; j++)
-		{
-			if(!pa->os[j].l->name.compare(name) && pa->os[j].frames >= states-2)
-			{
-				states_vec = new int[pa->os[j].frames];
-				mixes = new int[pa->os[j].frames];
-				ntu++;
-				newP += ViterbiAlg(pa->os+j,states_vec,mixes);
-				UpdateCounts(pa->os+j,states_vec);
-				delete[] mixes;
-				delete[] states_vec;
-			}
 
-			if(pa->os[j].frames < states-2)
-				fprintf(stderr,"HMM::Initialise():Segment(%d) dont have enough frames(%d), minimum frames=%d\n",j,pa->os[j].frames,states-2);
+		for (int iv = 0; iv < pav.size(); iv++)
+		{
+			pa = pav[iv];
+			if (trace & TRACE::TOP || trace & TRACE::DEEP)
+				printf("Initialise HMM(%s) with data: %s\n", std::string(name).c_str(), std::string(pa->audio_src).c_str());
+			for (j = 0, newP = 0; j < pa->segments; j++)
+			{
+				if(!pa->os[j].l->name.compare(name) && pa->os[j].frames >= states-2)
+				{
+					states_vec = new int[pa->os[j].frames];
+					mixes = new int[pa->os[j].frames];
+					ntu++;
+					newP += ViterbiAlg(pa->os+j,states_vec,mixes);
+					UpdateCounts(pa->os+j,states_vec);
+					delete[] mixes;
+					delete[] states_vec;
+				}
+
+				if(pa->os[j].frames < states-2)
+					fprintf(stderr,"HMM::Initialise():Segment(%d) dont have enough frames(%d), minimum frames=%d\n",j,pa->os[j].frames,states-2);
+			} 
 		}
-		newP /= pa->segments;
+
+		newP /= ntu;
 		delta = newP - totalP;
 		converged = (i>0) && (fabs(delta) < epsilon);
-		if (!converged)
+		if (!converged && ntu > 0)
 		{	
 			UpdateMean();
 			UpdateVar();
@@ -303,46 +313,54 @@ void HMM::Initialise(ParamAudio * pa, int iteration)
 }
 
 
-void HMM::GetMean(ParamAudio * pa)
+void HMM::GetMean(std::vector<ParamAudio *> pav)
 {
 	int statenumber=0;
 	float frames_per_state;
 	int *state_fr_counter=new int[states-2];
+	ParamAudio * pa;
 	for (int i = 0; i < states-2; i++)
 	{
 		state_fr_counter[i]=0;
 	}
 
 
-	for(int i=0;i<pa->segments;i++)
+	for (int iv = 0; iv < pav.size(); iv++)
 	{
-		if(pa->os[i].l == NULL || !pa->os[i].l->name.compare(name))
+		pa = pav[iv];
+		for(int i=0;i<pa->segments;i++)
 		{
-			frames_per_state = (float)pa->os[i].frames/(float)(states-2);
-			for (int j= 0; j < pa->os[i].frames; j++)
+			if(pa->os[i].l == NULL || !pa->os[i].l->name.compare(name))
 			{
-				statenumber = (int)((float)j/(float)(frames_per_state));
-				for (int k = 0; k < pa->os[i].frame_lenght; k++)
+				frames_per_state = (float)pa->os[i].frames/(float)(states-2);
+				for (int j= 0; j < pa->os[i].frames; j++)
 				{
-					if(pa->os[i].coef != NULL)
-						state[statenumber].mean[k] += (pa->os[i].coef[j][k]);
-					if(pa->os[i].delta != NULL)
-						state[statenumber].mean[k+pa->os[i].frame_lenght] += (pa->os[i].delta[j][k]);
-					if(pa->os[i].acc != NULL)
-						state[statenumber].mean[k+(2*pa->os[i].frame_lenght)] += (pa->os[i].acc[j][k]);
+					statenumber = (int)((float)j/(float)(frames_per_state));
+					for (int k = 0; k < pa->os[i].frame_lenght; k++)
+					{
+						if(pa->os[i].coef != NULL)
+							state[statenumber].mean[k] += (pa->os[i].coef[j][k]);
+						if(pa->os[i].delta != NULL)
+							state[statenumber].mean[k+pa->os[i].frame_lenght] += (pa->os[i].delta[j][k]);
+						if(pa->os[i].acc != NULL)
+							state[statenumber].mean[k+(2*pa->os[i].frame_lenght)] += (pa->os[i].acc[j][k]);
+					}
+					state_fr_counter[statenumber]++;
 				}
-				state_fr_counter[statenumber]++;
+
 			}
 
-		}
-
+		} 
 	}
 
 	for (int i = 0; i < states - 2; i++)
 	{
-		for (int j = 0; j < vector_size; j++)
+		if (state_fr_counter[i]>0)
 		{
-			state[i].mean[j] /= state_fr_counter[i];
+			for (int j = 0; j < vector_size; j++)
+			{
+				state[i].mean[j] /= state_fr_counter[i];
+			} 
 		}
 	}
 
@@ -353,10 +371,11 @@ void HMM::GetMean(ParamAudio * pa)
 
 
 
-void HMM::GetVariance(ParamAudio * pa)
+void HMM::GetVariance(std::vector<ParamAudio *> pav)
 {
 	int statenumber=0;
 	float frames_per_state;
+	ParamAudio * pa;
 	int *state_fr_counter=new int[states-2];
 	double ** temp_var = new double*[states-2];
 	double x;
@@ -372,49 +391,57 @@ void HMM::GetVariance(ParamAudio * pa)
 
 	
 
-	for(int i=0;i<pa->segments;i++)
+	for (int iv = 0; iv < pav.size(); iv++)
 	{
-		if(pa->os[i].l == NULL || !pa->os[i].l->name.compare(name))
+		pa = pav[iv];
+		for(int i=0;i<pa->segments;i++)
 		{
-			frames_per_state = (float)pa->os[i].frames/(float)(states-2);
-			for (int j= 0; j < pa->os[i].frames; j++)
+			if(pa->os[i].l == NULL || !pa->os[i].l->name.compare(name))
 			{
-				statenumber = (int)((float)j/(float)(frames_per_state));
-				for (int k = 0; k < pa->os[i].frame_lenght; k++)
+				frames_per_state = (float)pa->os[i].frames/(float)(states-2);
+				for (int j= 0; j < pa->os[i].frames; j++)
 				{
-					if(pa->os[i].coef != NULL)
+					statenumber = (int)((float)j/(float)(frames_per_state));
+					for (int k = 0; k < pa->os[i].frame_lenght; k++)
 					{
-						x=(pa->os[i].coef[j][k])-state[statenumber].mean[k];
-						temp_var[statenumber][k] += x*x;
-					}
+						if(pa->os[i].coef != NULL)
+						{
+							x=(pa->os[i].coef[j][k])-state[statenumber].mean[k];
+							temp_var[statenumber][k] += x*x;
+						}
 
-						
-					if(pa->os[i].delta != NULL)
-					{
-						x=(pa->os[i].delta[j][k])-state[statenumber].mean[k+pa->os[i].frame_lenght] ;
-						temp_var[statenumber][k+pa->os[i].frame_lenght] += x*x;
-					}
 
-						
-					if(pa->os[i].acc != NULL)
-					{
-						x=(pa->os[i].acc[j][k])-state[statenumber].mean[k+(2*pa->os[i].frame_lenght)];
-						temp_var[statenumber][k+(2*pa->os[i].frame_lenght)] += x*x;
+						if(pa->os[i].delta != NULL)
+						{
+							x=(pa->os[i].delta[j][k])-state[statenumber].mean[k+pa->os[i].frame_lenght] ;
+							temp_var[statenumber][k+pa->os[i].frame_lenght] += x*x;
+						}
+
+
+						if(pa->os[i].acc != NULL)
+						{
+							x=(pa->os[i].acc[j][k])-state[statenumber].mean[k+(2*pa->os[i].frame_lenght)];
+							temp_var[statenumber][k+(2*pa->os[i].frame_lenght)] += x*x;
+						}
 					}
+					state_fr_counter[statenumber]++;
 				}
-				state_fr_counter[statenumber]++;
+
 			}
 
-		}
-
+		} 
 	}
 
 	for (int i = 0; i < states - 2; i++)
 	{
-		for (int j = 0; j < vector_size; j++)
+
+		if (state_fr_counter[i]>0)
 		{
-			temp_var[i][j]/=state_fr_counter[i];
-			state[i].var[j] = temp_var[i][j]<minVar?minVar:temp_var[i][j];
+			for (int j = 0; j < vector_size; j++)
+			{
+				temp_var[i][j]/=state_fr_counter[i];
+				state[i].var[j] = temp_var[i][j]<minVar?minVar:temp_var[i][j];
+			} 
 		}
 	}
 
@@ -704,22 +731,27 @@ void HMM::UpdateTransition(void)
 }
 
 
-void HMM::ReEstimate(ParamAudio * pa, int iterations)
+void HMM::ReEstimate(std::vector<ParamAudio *> pav, int iterations)
 {
 
 
-	if (trace & TRACE::TOP || trace & TRACE::DEEP)
-		printf("ReEstimate HMM(%s) with data: %s\n", std::string(name).c_str(), std::string(pa->audio_src).c_str());
+	
 
 	float ** prob = NULL;
 	int max_obs=0,ntu;
 	double ap,bp;
 	float spr,newP,delta,totalP;
 	bool converged = false;
-	for (int i = 0; i < pa->segments; i++)
+	ParamAudio * pa;
+
+	for (int iv = 0; iv < pav.size(); iv++)
 	{
-		if(max_obs<pa->os[i].frames)
-			max_obs = pa->os[i].frames;
+		pa = pav[iv];
+		for (int i = 0; i < pa->segments; i++)
+		{
+			if(max_obs<pa->os[i].frames)
+				max_obs = pa->os[i].frames;
+		} 
 	}
 
 	alpha = new double*[states];
@@ -738,41 +770,50 @@ void HMM::ReEstimate(ParamAudio * pa, int iterations)
 		ResetOldParams();
 		ntu=0;
 		newP=0.0;
-		for (int j = 0; j < pa->segments; j++)
+		for (int iv = 0; iv < pav.size(); iv++)
 		{
-			if(!pa->os[j].l->name.compare(name))
+			pa = pav[iv];
+			if (trace & TRACE::TOP || trace & TRACE::DEEP)
+				printf("ReEstimate HMM(%s) with data: %s\n", std::string(name).c_str(), std::string(pa->audio_src).c_str());
+			for (int j = 0; j < pa->segments; j++)
 			{
-				prob = GetProbability(pa->os+j);
-				
-				if ((ap = GetAlpha(prob,pa->os[j].frames))>LSMALL)
+				if(!pa->os[j].l->name.compare(name))
 				{
-					bp = GetBeta(prob,pa->os[j].frames);
-					spr= (ap + bp) / 2.0;
-					newP += spr; 
-					ntu++;
-					UpdateRestCount(prob,pa->os+j,spr);
-				}
-				if(prob != NULL)
-				{
-					for (int i = 0; i < states-2; i++)
-					{
-						if(prob[i])
-							delete[] prob[i];
-					}
+					prob = GetProbability(pa->os+j);
 
-					delete[] prob; 
-				} 
-			}
+					if ((ap = GetAlpha(prob,pa->os[j].frames))>LSMALL)
+					{
+						bp = GetBeta(prob,pa->os[j].frames);
+						spr= (ap + bp) / 2.0;
+						newP += spr; 
+						ntu++;
+						UpdateRestCount(prob,pa->os+j,spr);
+					}
+					if(prob != NULL)
+					{
+						for (int i = 0; i < states-2; i++)
+						{
+							if(prob[i])
+								delete[] prob[i];
+						}
+
+						delete[] prob; 
+					} 
+				}
+			} 
 		}
 	
-		UpdateMean();
-		UpdateVar();
-		UpdateTransition();
+		
 
 		newP /= ntu;
 		delta = newP - totalP;
 		converged = (i>0) && (fabs(delta) < epsilon);
-		
+		if (!converged && ntu > 2)
+		{
+			UpdateMean();
+			UpdateVar();
+			UpdateTransition(); 
+		}
 		totalP = newP;
 
 		if (trace & TRACE::DEEP)
@@ -1000,8 +1041,10 @@ void HMM::SetMinDuration(void)
 
 	for (i=0,nds=0;i<states;i++) so[i]=md[i]=-1;
 	FindSO(md,&nds,states-1);
-	for (i=0;i<nds;i++) so[md[i]]=i;
-    for (i=0;i<states;i++) md[i]=states-1;
+	for (i=0;i<nds;i++) 
+		so[md[i]<0?0:md[i]]=i;
+    for (i=0;i<states;i++) 
+		md[i]=states-1;
     for (k=0,md[0]=0;k<nds;k++) {
          i=so[k];
          if (i<0 || i>=states)  continue;

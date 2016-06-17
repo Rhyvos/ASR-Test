@@ -26,8 +26,7 @@ Audio::Audio(Config * cf)
 	high_freq = 0;
 	cep_number = 12;
 	regression_window = 2;
-	fft_frame_size = 2;
-	while(fft_frame_size<frame_size) fft_frame_size<<=1;
+	
 	
 	if (cf != nullptr)
 	{
@@ -52,6 +51,8 @@ Audio::Audio(Config * cf)
 		if(cf->Exist("TRACE"))
 			trace = cf->GetConfig("TRACE"); 
 	}
+		fft_frame_size = 2;
+	while(fft_frame_size<frame_size) fft_frame_size<<=1;
 }
 
 

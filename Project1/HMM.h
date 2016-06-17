@@ -31,9 +31,9 @@ public:
 public:
 	HMM(std::string hmm_src, Config * cf);
 	HMM(Config * cf, std::string l_name);
-	void Initialise(ParamAudio * pa, int iteration);
-	void GetMean(ParamAudio * pa);
-	void GetVariance(ParamAudio * pa);
+	void Initialise(std::vector<ParamAudio *> pav, int iteration);
+	void GetMean(std::vector<ParamAudio *> pav);
+	void GetVariance(std::vector<ParamAudio *> pav);
 	void FindGConst(void);
 	float OutP(ObservationSegment * os, int fr_number, int state_nr);
 	float ViterbiAlg(ObservationSegment * os, int * state_vec, int * mixes);
@@ -44,7 +44,7 @@ public:
 	void UpdateMean(void);
 	void UpdateVar(void);
 	void UpdateTransition(void);
-	void ReEstimate(ParamAudio * pa, int iterations);
+	void ReEstimate(std::vector<ParamAudio *> pav, int iterations);
 	float ** GetProbability(ObservationSegment * os);
 	double GetAlpha(float ** prob, int frames);
 	double LAdd(double x, double y);

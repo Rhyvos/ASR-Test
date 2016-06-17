@@ -125,24 +125,18 @@ int main(int argc, char * argv[])
 
 		if(string(argv[i]).compare("-i") == 0)
 		{
-			for (int j = 0; j < pa.size(); j++)
+			for (int k = 0; k < hmms.size(); k++)
 			{
-				for (int k = 0; k < hmms.size(); k++)
-				{
-					hmms[k]->Initialise(pa[j],iterations);
-				}
+				hmms[k]->Initialise(pa,iterations);
 			}
+
 		}
 		else if(string(argv[i]).compare("-t") == 0)
 		{
-			for (int j = 0; j < pa.size(); j++)
-			{
 				for (int k = 0; k < hmms.size(); k++)
 				{
-					hmms[k]->ReEstimate(pa[j],iterations);
+					hmms[k]->ReEstimate(pa,iterations);
 				}
-			}
-
 		}
 		else if(string(argv[i]).compare("-f") == 0)
 		{

@@ -1,3 +1,11 @@
-hmms/A.hmm
-hmms/B.hmm
-hmms/sil.hmm
+hmms/0.hmm
+hmms/1.hmm
+hmms/2.hmm
+hmms/3.hmm
+hmms/4.hmm
+hmms/5.hmm
+hmms/6.hmm
+hmms/7.hmm
+hmms/8.hmm
+hmms/9.hmm
+hmms/S.hmm

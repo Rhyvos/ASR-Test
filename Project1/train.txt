@@ -1,1 +1,6 @@
-data/audio/train1.wav data/labels/train1.lab
+data/audio/Asia1.wav data/labels/Asia1.lab
+data/audio/Asia2.wav data/labels/Asia2.lab
+data/audio/Asia3.wav data/labels/Asia3.lab
+data/audio/Asia4.wav data/labels/Asia4.lab
+data/audio/Asia5.wav data/labels/Asia5.lab
+data/audio/Asia6.wav data/labels/Asia6.lab
