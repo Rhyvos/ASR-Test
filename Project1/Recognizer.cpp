@@ -130,7 +130,7 @@ void Recognizer::DoRecognition(ParamAudio * pa)
 	{
 		ReadPath(wordMaxTok.path);
 		float start,end;
-		start = (wordMaxTok.path->prev==NULL)?0:wordMaxTok.path->prev->frame;
+		start = (wordMaxTok.path->prev==NULL)?0:wordMaxTok.path->frame;
 		end = pa->os[0].frames;
 		transcript.push_back(Label(std::string(wordMaxNode->hmm->name).c_str(),start,end));
 	}
