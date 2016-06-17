@@ -126,7 +126,7 @@ void Recognizer::DoRecognition(ParamAudio * pa)
 			printf("Observation @%d most like node %s\n",i,genMaxNode->hmm->name.c_str());
 	}
 
-	if(wordMaxTok.path != NULL && ((trace & TRACE::TOP) || (trace & TRACE::DEEP)))
+	if(wordMaxTok.path != NULL)
 	{
 		ReadPath(wordMaxTok.path);
 		float start,end;
@@ -308,8 +308,12 @@ void Recognizer::SaveTranscript(ParamAudio * pa)
 	int a = pa->frame_size-pa->frame_overlap;
 	int sample_delta = Second/pa->audio_header.SampleRate;
 	std::ofstream output(std::string(pa->audio_src+".lab").c_str(),std::ofstream::out);
+	if(trace & TRACE::TOP)
+		printf("Transcription:\n");
 	for (int i = 0; i < transcript.size(); i++)
 	{
+		if(trace & TRACE::TOP)
+			printf("%f %f %s\n",(transcript[i].start * a * sample_delta)/10000000.0,(transcript[i].end * a * sample_delta)/10000000.0, transcript[i].name.c_str());
 		output<<(transcript[i].start * a * sample_delta)/10000000.0<<" "<<(transcript[i].end * a * sample_delta)/10000000.0<<" "<<transcript[i].name<<std::endl;
 	}
 	transcript.clear();
