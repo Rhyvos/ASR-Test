@@ -13,3 +13,4 @@ data/audio/Kasia6.wav data/labels/Kasia6.lab
 data/audio/Bartek1.wav data/labels/Bartek1.lab
 data/audio/Bartek2.wav data/labels/Bartek2.lab
 data/audio/Bartek3.wav data/labels/Bartek3.lab
+data/audio/BartekTest2.wav data/labels/BartekTest2.lab

@@ -1,3 +1,2 @@
-data/audio/AsiaF.wav
-data/audio/KasiaF.wav
-data/audio/BartekTest.wav
+data/audio/BartekTest3.wav
+data/audio/BartekTest4.wav

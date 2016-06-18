@@ -4,3 +4,12 @@ data/audio/Asia3.wav data/labels/Asia3.lab
 data/audio/Asia4.wav data/labels/Asia4.lab
 data/audio/Asia5.wav data/labels/Asia5.lab
 data/audio/Asia6.wav data/labels/Asia6.lab
+data/audio/Kasia1.wav data/labels/Kasia1.lab
+data/audio/Kasia2.wav data/labels/Kasia2.lab
+data/audio/Kasia3.wav data/labels/Kasia3.lab
+data/audio/Kasia4.wav data/labels/Kasia4.lab
+data/audio/Kasia5.wav data/labels/Kasia5.lab
+data/audio/Kasia6.wav data/labels/Kasia6.lab
+data/audio/Bartek1.wav data/labels/Bartek1.lab
+data/audio/Bartek2.wav data/labels/Bartek2.lab
+data/audio/Bartek3.wav data/labels/Bartek3.lab

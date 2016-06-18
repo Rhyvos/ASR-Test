@@ -12,7 +12,7 @@
 #include <cmath>
 #include <stdio.h>
 
-#define TEST
+//#define TEST
 #ifdef TEST
 float Mel(int k,float fres);
 float WarpFreq (float fcl, float fcu, float freq, float minFreq, float maxFreq , float alpha);

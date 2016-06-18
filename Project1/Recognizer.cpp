@@ -135,7 +135,10 @@ void Recognizer::DoRecognition(ParamAudio * pa)
 		transcript.push_back(Label(std::string(wordMaxNode->hmm->name).c_str(),start,end));
 	}
 	if(transcript.size() == 0)
-		transcript.push_back(Label(std::string(wordMaxNode->hmm->name).c_str(),0,pa->os[0].frames));
+		if(wordMaxNode != NULL)
+			transcript.push_back(Label(std::string(wordMaxNode->hmm->name).c_str(),0,pa->os[0].frames));
+		else
+			transcript.push_back(Label(std::string("Can't find best path").c_str(),0,0));
 
 	SaveTranscript(pa);
 	FreeMemory();

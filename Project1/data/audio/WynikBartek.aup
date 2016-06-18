@@ -1,0 +1,52 @@
+<?xml version="1.0" standalone="no" ?>
+<!DOCTYPE project PUBLIC "-//audacityproject-1.3.0//DTD//EN" "http://audacity.sourceforge.net/xml/audacityproject-1.3.0.dtd" >
+<project xmlns="http://audacity.sourceforge.net/xml/" projname="WynikBartek_data" version="1.3.0" audacityversion="2.1.2" sel0="1.9634900000" sel1="2.4769600000" vpos="0" h="0.0000000000" zoom="214.3436219262" rate="44100.0" snapto="off" selectionformat="hh:mm:ss + milliseconds" frequencyformat="Hz" bandwidthformat="octaves">
+	<tags/>
+	<wavetrack name="BartekTest" channel="2" linked="0" mute="0" solo="0" height="73" minimized="0" isSelected="0" rate="44100" gain="1.0" pan="0.0">
+		<waveclip offset="0.00000000">
+			<sequence maxsamples="262144" sampleformat="262159" numsamples="156160">
+				<waveblock start="0">
+					<simpleblockfile filename="e000059f.au" len="156160" min="-0.434204" max="0.403809" rms="0.027047"/>
+				</waveblock>
+			</sequence>
+			<envelope numpoints="0"/>
+		</waveclip>
+	</wavetrack>
+	<labeltrack name="BartekTest.wav" numlabels="6" height="64" minimized="0" isSelected="0">
+		<label t="0.0000000000" t1="0.5966400000" title="S"/>
+		<label t="0.5966400000" t1="0.9003840000" title="S"/>
+		<label t="0.9003840000" t1="1.4572500000" title="S"/>
+		<label t="1.4572500000" t1="2.3974100000" title="S"/>
+		<label t="2.3974100000" t1="3.0410600000" title="S"/>
+		<label t="2.3974100000" t1="3.5219800000" title="S"/>
+	</labeltrack>
+	<labeltrack name="BartekTest.wav" numlabels="6" height="62" minimized="0" isSelected="0">
+		<label t="0.0000000000" t1="0.6255680000" title="S"/>
+		<label t="0.6255680000" t1="0.9003840000" title="S"/>
+		<label t="0.9003840000" t1="1.4608600000" title="S"/>
+		<label t="1.4608600000" t1="2.4118700000" title="S"/>
+		<label t="2.4118700000" t1="3.0446700000" title="S"/>
+		<label t="2.4118700000" t1="3.5219800000" title="S"/>
+	</labeltrack>
+	<labeltrack name="BartekTest.wav" numlabels="7" height="66" minimized="0" isSelected="0">
+		<label t="0.0000000000" t1="0.6219520000" title="S"/>
+		<label t="0.6219520000" t1="0.9437760000" title="S"/>
+		<label t="0.9437760000" t1="1.4608600000" title="S"/>
+		<label t="1.4608600000" t1="2.4118700000" title="S"/>
+		<label t="2.4118700000" t1="2.7590100000" title="S"/>
+		<label t="2.7590100000" t1="3.0446700000" title="S"/>
+		<label t="2.7590100000" t1="3.5219800000" title="S"/>
+	</labeltrack>
+	<labeltrack name="BartekTest.wav" numlabels="10" height="68" minimized="0" isSelected="0">
+		<label t="0.0000000000" t1="0.3182080000" title="S"/>
+		<label t="0.3182080000" t1="0.6653440000" title="3"/>
+		<label t="0.6653440000" t1="0.9437760000" title="S"/>
+		<label t="0.9437760000" t1="1.1462700000" title="S"/>
+		<label t="1.1462700000" t1="1.5874200000" title="1"/>
+		<label t="1.5874200000" t1="1.9634900000" title="S"/>
+		<label t="1.9634900000" t1="2.4769600000" title="4"/>
+		<label t="2.4769600000" t1="2.7590100000" title="S"/>
+		<label t="2.7590100000" t1="3.0446700000" title="S"/>
+		<label t="2.7590100000" t1="3.5219800000" title="S"/>
+	</labeltrack>
+</project>
