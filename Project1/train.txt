@@ -1,3 +1,13 @@
+data/audio/miki1.wav data/labels/miki1.lab
+data/audio/miki2.wav data/labels/miki2.lab
+data/audio/miki3.wav data/labels/miki3.lab
+data/audio/paki1.wav data/labels/paki1.lab
+data/audio/paki2.wav data/labels/paki2.lab
+data/audio/paki3.wav data/labels/paki3.lab
+data/audio/szymon1.wav data/labels/szymon1.lab
+data/audio/szymon2.wav data/labels/szymon2.lab
+data/audio/szymon3.wav data/labels/szymon3.lab
+data/audio/szymon4.wav data/labels/szymon4.lab
 data/audio/Asia1.wav data/labels/Asia1.lab
 data/audio/Asia2.wav data/labels/Asia2.lab
 data/audio/Asia3.wav data/labels/Asia3.lab

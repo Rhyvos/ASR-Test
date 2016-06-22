@@ -95,7 +95,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	int frame_index = 0;
 	int frames = 0;// floor((pm->audio_header.Subchunk2Size/(pm->audio_header.BitsPerSample/BitsPerByte)) / (frame_size-frame_overlap));
 
-	while(frames*(frame_size-frame_overlap)+frame_overlap <( pm->audio_header.Subchunk2Size/(pm->audio_header.BitsPerSample/BitsPerByte)))
+	while(frames*(frame_size-frame_overlap)+frame_overlap <=( pm->audio_header.Subchunk2Size/(pm->audio_header.BitsPerSample/BitsPerByte)))
 		frames++;
 	frames--;
 
