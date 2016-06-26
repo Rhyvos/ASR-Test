@@ -65,7 +65,12 @@ HMM::HMM(std::string hmm_src, Config *cf) //load from file
 
 	}
 
-	
+	if(!input.good())
+	{
+		fprintf(stderr,"Can't find Hmm file: %s",hmm_src.c_str());
+		exit(1);
+	}
+
 
 	while (input.good()) {
 		input.getline(buffer,2048);
@@ -198,7 +203,7 @@ HMM::HMM(Config * cf, std::string l_name): name(l_name)
 	if(states<3 || vector_size<1)
 	{
 		fprintf(stderr, "HMM: Wrong initialisaton parametrs: vector_size: %d or states: %d\n",vector_size,states);
-		return;
+		exit(1);
 	}
 	
 	state = new State[states-2];				// we don't need first and last state mean and variance
@@ -478,7 +483,7 @@ float HMM::OutP(ObservationSegment * os, int fr_number, int state_nr)
 	if(os->frame_lenght*3!=vector_size)
 	{
 		fprintf(stderr,"HMM.OpuP:Audio param vector size diffrent then state vector size: %d!=%d \n",os->frame_lenght*3,vector_size);
-		return 0;
+		exit(1);
 	}
 
 	float sum;
@@ -1048,7 +1053,7 @@ void HMM::SetMinDuration(void)
     for (k=0,md[0]=0;k<nds;k++) {
          i=so[k];
          if (i<0 || i>=states)  continue;
-         /* Find minimum duration to state i */
+         
          for (int j=0;j<states-1;j++)
 			 if (transition[j][i]>LSMALL) {
                d=md[j]+((i==states-1)?0:1);
@@ -1057,6 +1062,7 @@ void HMM::SetMinDuration(void)
     }
 	if (md[states-1]<0 || md[states-1]>=states) {
 		fprintf(stderr,"SetMinDurs: Transition matrix with discontinuity");
+		exit(1);
 		minimum_duration = (transition[0][states-1]>LSMALL ? 0 : 1 ); 
     }
     else

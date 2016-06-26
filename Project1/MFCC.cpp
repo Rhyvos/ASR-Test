@@ -108,13 +108,13 @@ void MFCC::Compute(int num_samples, int num_cep, float * input, float * output)
 	if(window_lenght < num_samples || num_samples <= 0)
 	{
 		fprintf(stderr, "[MFCC::Compute] Wrong audio window size: %d\n",window_lenght);
-		return;
+		exit(1);
 	}
 
 	if(Filters_Number<num_cep || num_cep <= 0)
 	{
 		fprintf(stderr, "[MFCC::Compute] Wrong coefficients number: %d\n",num_cep);
-		return;
+		exit(1);
 	}
 
 
@@ -143,8 +143,8 @@ void MFCC::Compute(int num_samples, int num_cep, float * input, float * output)
 	}
 
 
-	Preemphasis(num_samples,preemphasis_param,tmp_data);					//only audio data
-	fft->Window_Func(FFT::Hamming,num_samples,tmp_data);					//only audio data
+	Preemphasis(num_samples,preemphasis_param,tmp_data);					
+	fft->Window_Func(FFT::Hamming,num_samples,tmp_data);				
 
 	fft->Transform(window_lenght,false,tmp_data,NULL,real_data,imag_data);
 
@@ -167,7 +167,7 @@ void MFCC::Compute(int num_samples, int num_cep, float * input, float * output)
 	 short *loChan = new short[window_lenght/2+1];
 	 float *loWt= new float[window_lenght/2+1];
 	 InitFBank(num_samples,625,Filters_Number,-1,-1,false,true,false,1,0,0,loChan,loWt);
-	 for (int k = 2; k <= window_lenght/2; k++) {             /* fill bins */
+	 for (int k = 2; k <= window_lenght/2; k++) {            
       t1 = real_data[k-1]; t2 = imag_data[k-1];
       
          ek = sqrt(t1*t1 + t2*t2);
@@ -178,9 +178,7 @@ void MFCC::Compute(int num_samples, int num_cep, float * input, float * output)
       if (bin>0) filter_energy[bin-1] += t1;
 	  if (bin<Filters_Number) filter_energy[bin] += ek - t1;
    }
-   //for (bin=1; bin<=info.numChans; bin++) { printf("fbank[%d] = %f\n",bin,fbank[bin]);}getchar();
-   /* Take logs */
-   
+
 	 for (bin=0; bin<Filters_Number; bin++) { 
          t1 = filter_energy[bin];
 		 if (t1<melfloor){ t1 = melfloor; }
@@ -343,12 +341,12 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 	int fftN;
 	float fres;
 	int klo,khi;
-	/* Save sizes to cross-check subsequent usage */
+	
 	frameSize = frameSize; numChans = numChans;
 	sampPeriod = sampPeriod; 
 	usePower = usePower; takeLogs = takeLogs;
 
-	/* Calculate required FFT size */
+	
 	fftN = 2;   
 	while (frameSize>fftN) fftN *= 2;
 	if (doubleFFT) 
@@ -357,8 +355,8 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 	fres = 1.0E7/(sampPeriod * fftN * 700.0);
 	maxChan = numChans+1;
 
-	/* set lo and hi pass cut offs if any */
-	klo = 2; khi = Nby2;       /* apply lo/hi pass filtering */
+	
+	klo = 2; khi = Nby2;       
 	mlo = 0; mhi = Mel(Nby2+1,fres);
 
 	if (lopass>=0.0) {
@@ -373,7 +371,7 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 	}
 
 
-	/* Create vector of fbank centre frequencies */
+	
 	float * cf = new float[maxChan+1];
 	ms = mhi - mlo;
 
@@ -383,7 +381,6 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 
 		}
 		else {
-			/* scale assuming scaling starts at lopass */
 			float minFreq = 700.0 * (exp (mlo / 1127.0) - 1.0 );
 			float maxFreq = 700.0 * (exp (mhi / 1127.0) - 1.0 );
 			float cf1 = ((float)chan / (float) maxChan) * ms + mlo;
@@ -395,8 +392,6 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 
 	}
 
-	/* Create loChan map, loChan[fftindex] -> lower channel index */
-
 	for (k=1,chan=1; k<=Nby2; k++){
 		melk = Mel(k,fres);
 		if (k<klo || k>khi) loChan[k]=-1;
@@ -406,9 +401,6 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 		}
 
 	}
-
-	/* Create vector of lower channel weights */   
-
 	for (k=1; k<=Nby2; k++) {
 		chan = loChan[k];
 		if (k<klo || k>khi) loWt[k]=0.0;
@@ -420,7 +412,6 @@ void InitFBank(int frameSize, long sampPeriod, int numChans,
 				loWt[k] = (cf[1]-Mel(k,fres))/(cf[1] - mlo);
 		}
 	}
-	/* Create workspace for fft */
 
 	delete[] cf;
 }  

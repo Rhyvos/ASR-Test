@@ -68,7 +68,11 @@ int main(int argc, char * argv[])
 				else if(tmp.size() == 1)
 					pa.push_back(audio->ParamAudioFile(tmp[0].c_str(),""));
 				else
-					fprintf(stderr,"wrong script line: %s\n",std::string(buffer).c_str());
+				{
+					fprintf(stderr,"wrong script line: %s\n",std::string(buffer).c_str()); 
+					exit(1);
+				}
+
 			}
 			input.close();
 			delete audio;
@@ -86,7 +90,11 @@ int main(int argc, char * argv[])
 				if(tmp.size() == 1)
 					hmms.push_back(new HMM(tmp[0].c_str(),cf));
 				else
-					fprintf(stderr,"wrong hmm list line: %s\n",std::string(buffer).c_str());
+				{
+					fprintf(stderr,"wrong hmm list line: %s\n",std::string(buffer).c_str()); 
+					exit(1);
+				}
+
 			}
 			input.close();
 		}
@@ -118,7 +126,11 @@ int main(int argc, char * argv[])
 					hmms.push_back(new HMM(cf,s.c_str())); 
 				}
 				else
-					fprintf(stderr,"wrong hmm list line: %s\n",std::string(buffer).c_str());
+				{
+					fprintf(stderr,"wrong hmm list line: %s\n",std::string(buffer).c_str()); 
+					exit(1);
+				}
+
 			}
 			input.close();
 		}

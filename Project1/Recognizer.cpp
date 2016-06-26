@@ -91,7 +91,6 @@ void Recognizer::LoadHmm(std::string hmm_src)
 void Recognizer::DoRecognition(ParamAudio * pa)
 {
 
-	//resettokens()
 	if(trace & TRACE::TOP)
 		printf("Begin recognition proccess for file: %s\n",std::string(pa->audio_src).c_str());
 	int max=0;

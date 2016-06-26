@@ -83,7 +83,12 @@ void FinalReEstimate::ListHmms(ParamAudio * pa)
 			
 		}
 		if(j == hmms.size())
+		{
 			fprintf(stderr,"Can't find hmm:%s\n",std::string(pa->os[i].l->name).c_str());
+			exit(1);
+		}
+		
+
 	}
 }
 
@@ -93,7 +98,6 @@ void FinalReEstimate::SetBeamTaper(int Q, int T)
 	int q,dq,i,t;
 	qHi = new int[T];
 	qLo = new int[T];
-   /* Set leading taper */
 	q=0;
 	dq=hmm_seq[q]->minimum_duration;
 	i=0;
@@ -170,13 +174,13 @@ float FinalReEstimate::OutP(ParamAudio * pa, int fr_number, int segment, int sta
 	if(pa->coef_num*3!=hmm_seq[segment]->vector_size)
 	{
 		fprintf(stderr,"FinalReEstimate::OutP:Audio param vector size diffrent then state vector size: %d!=%d \n",pa->coef_num,hmm_seq[segment]->vector_size);
-		return 0;
+		exit(1);
 	}
 
 	if(hmm_seq[segment]->states<state_nr-2)
 	{
 		fprintf(stderr,"FinalReEstimate::OutP: Can't find state: %d \n",state_nr);
-		return 0;
+		exit(1);
 	}
 
 	float sum;
@@ -259,16 +263,13 @@ double FinalReEstimate::Beta(void)
 	}
 
 	for (t=frames-2;t>=0;t--) {      
-      gMax = LZERO;   q_at_gMax = 0;    /* max value of beta at time t */
+      gMax = LZERO;   q_at_gMax = 0;   
       startq = qHi[t+1];
       endq = (qLo[t+1]==0)?0:((qLo[t]>=qLo[t+1])?qLo[t]:qLo[t+1]-1);
 	  while (endq>0 && hmm_seq[endq-1]->minimum_duration==0) endq--;
-      /* start end-point at top of beta beam at t+1  */
-      /*  unless this is outside the beam taper.     */
-      /*  + 1 to allow for state q+1[1] -> q[N]      */
-      /*  + 1 for each tee model preceding endq.     */
+
       for (q=startq;q>=endq;q--) {
-         lMax = LZERO;                 /* max value of beta in model q */
+         lMax = LZERO;           
 		 hmm = hmm_seq[q]; 
          st = hmm->states-1;
          bqt = beta[t][q];
@@ -306,21 +307,29 @@ double FinalReEstimate::Beta(void)
       while (gMax-maxP[startq] > pruneThresh) {
 		 delete[] beta[t][startq];
          beta[t][startq] = NULL;
-         --startq;                   /* lower startq till thresh reached */
-         if (startq<0) fprintf(stderr,"SetBeta: Beta prune failed sq < 1\n");
+         --startq;                  
+		 if (startq<0) {
+			 fprintf(stderr,"SetBeta: Beta prune failed sq < 1\n"); 
+			 exit(1);
+		 }
+
       }
-      while(qHi[t]<startq) {        /* On taper */
+      while(qHi[t]<startq) {        
          delete[] beta[t][startq];
 		 beta[t][startq] = NULL;
-         --startq;                   /* lower startq till thresh reached */
-         if (startq<0) fprintf(stderr,"SetBeta: Beta prune failed on taper sq < 1\n");
+         --startq;                 
+		 if (startq<0) {
+			 fprintf(stderr,"SetBeta: Beta prune failed on taper sq < 1\n"); 
+			 exit(1);
+		 }
+
       }
      qHi[t] = startq;
       while (gMax-maxP[endq]>pruneThresh){
 
 		 delete[] beta[t][endq];
          beta[t][endq] = NULL;
-         ++endq;                   /* raise endq till thresh reached */
+         ++endq;                  
          if (endq>startq) {
             return(LZERO);
          }
@@ -330,7 +339,7 @@ double FinalReEstimate::Beta(void)
    }
 	delete[] maxP;
 	if (trace&TRACE::DEEP) {
-        printf(" Utterance prob per frame = %e\n",bqt[0]/frames);
+        printf(" Utterance probability per frame = %e\n",bqt[0]/frames);
    }
 	return bqt[0];
 }
@@ -401,9 +410,9 @@ void FinalReEstimate::Alpha(ParamAudio * pa)
 		  StepAlpha(t,&startq,&endq,seq_num-1,frames-1,pr);
     
       for (int q=startq;q<=endq;q++) { 
-         /* increment accs for each active model */
+         
          hmm = hmm_seq[q];
-         //up_hmm = up_qList[q];
+         
          aqt = alphat[q];
          bqt = beta[t][q];
 
@@ -478,34 +487,40 @@ void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, dou
    alphat  = this->alphat;
    alphat1 = this->alphat1;
 
-   /* First prune beta beam further to get alpha beam */
    
-   sq = qLo[t-1];    /* start start-point at bottom of beta beam at t-1 */
+   
+   sq = qLo[t-1];    
 
    while (pr-MaxModelProb(sq,t-1,sq)>minFrwdP){
-      ++sq;                /* raise start point */
+      ++sq;                
       if (sq>qHi[t]) 
-         fprintf(stderr,"StepAlpha: Alpha prune failed sq(%d) > qHi(%d)\n",sq,qHi[t]);
+	  {
+		  fprintf(stderr,"StepAlpha: Alpha prune failed sq(%d) > qHi(%d)\n",sq,qHi[t]); 
+		  exit(1);
+	  }
+
    }
-   if (sq<qLo[t])       /* start-point below beta beam so pull it back */
+   if (sq<qLo[t])       
       sq = qLo[t];
    
    eq = qHi[t-1]<Q?qHi[t-1]+1:qHi[t-1];
-   /* start end-point at top of beta beam at t-1  */
-   /* JJO : + 1 to allow for state q-1[N] -> q[1] */
-   /*       + 1 for each tee model following eq.  */
+  
    while (pr-MaxModelProb(eq,t-1,sq)>minFrwdP){
-      --eq;             /* lower end-point */
+      --eq;             
       if (eq<sq) 
-         fprintf(stderr,"StepAlpha: Alpha prune failed eq(%d) < sq(%d)\n",eq,sq);
+	  {
+		  fprintf(stderr,"StepAlpha: Alpha prune failed eq(%d) < sq(%d)\n",eq,sq); 
+		  exit(1);
+	  }
+
    }
    while (eq<Q && hmm_seq[eq]->minimum_duration==0) eq++;
-   if (eq>qHi[t])  /* end point above beta beam so pull it back */
+   if (eq>qHi[t])  
       eq = qHi[t]; 
       
    
    
-   /* Now compute current alpha column */
+
    tmp = this->alphat1; this->alphat1 = this->alphat; this->alphat = tmp;
    alphat  = this->alphat;
    alphat1 = this->alphat1;
@@ -522,7 +537,7 @@ void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, dou
          aq[0] = LZERO;
       else{
          aq[0] = alphat1[q-1][lNq];
-         if (q>sq && a1N>LSMALL) /* tee Model */
+         if (q>sq && a1N>LSMALL)
             aq[0] = LAdd(aq[0],alphat[q-1][0]+a1N);
       }
       for (j=1;j<Nq;j++) {
@@ -548,7 +563,11 @@ void FinalReEstimate::StepAlpha(int t, int * start, int * end, int Q, int T, dou
    
    if (t==T){
       if (fabs((x-pr)/T) > 0.001)
-         fprintf(stderr,"StepAlpha: Forward/Backward Disagree %f/%f\n",x,pr);
+	  {
+		  fprintf(stderr,"StepAlpha: Forward/Backward Disagree %f/%f\n",x,pr); 
+		  exit(1);
+	  }
+
       
    }
 

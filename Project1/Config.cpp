@@ -27,6 +27,8 @@ Config::Config(std::string src)
 	std::ifstream input(src,std::ifstream::in);
 	std::vector<std::string> tmp;
 	char buffer[256];
+	if(!input.good())
+		exit(2);
 	while (input.good()) {
 		input.getline(buffer,256);
 		tmp = split1(buffer," \t");
@@ -35,6 +37,8 @@ Config::Config(std::string src)
 			params pa(tmp[0],atof(tmp[1].c_str()));
 			p.push_back(pa);
 		}
+		else
+			fprintf(stderr,"Config line corrupted: %s",std::string(buffer).c_str());
   }
 	input.close();
 }

@@ -70,7 +70,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	if(!audio)
 	{
 		fprintf(stderr,"Can't open file: %s\n",audio_src);
-		return NULL;
+		exit(1);
 	}
 	
 		
@@ -83,7 +83,7 @@ ParamAudio * Audio::ParamAudioFile(const char * audio_src, const char * label_sr
 	if(bytes != sizeof(pm->audio_header))
 	{
 		fprintf(stderr,"Wrong audio file: %s\n",audio_src);
-		return NULL;
+		exit(1);
 	}
 	high_freq = high_freq ? high_freq : (pm->audio_header.SampleRate/2);
 
